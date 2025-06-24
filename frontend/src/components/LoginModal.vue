@@ -1,27 +1,44 @@
 <template>
   <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
-      <h2>{{ isSignUp ? 'Sign Up' : 'Sign In' }}</h2>
+      <h2>{{ isProfileUpdate ? 'Update Your Profile' : (isSignUp ? 'Sign Up' : 'Sign In') }}</h2>
+      
+      <div v-if="isProfileUpdate" class="profile-update-info">
+        <p>Welcome! To personalize your experience, please provide your first and last name.</p>
+      </div>
       
       <div v-if="authError" class="auth-error">
         {{ authError }}
       </div>
 
       <form @submit.prevent="handleSubmit" class="auth-form">
-        <div v-if="isSignUp" class="form-group">
-          <label for="name">Full Name*</label>
+        <div v-if="isSignUp || isProfileUpdate" class="form-group">
+          <label for="firstName">First Name*</label>
           <input
             type="text"
-            id="name"
-            v-model="name"
-            placeholder="Enter your full name"
+            id="firstName"
+            v-model="firstName"
+            placeholder="Enter your first name"
             class="form-input"
-            :class="{ error: nameError }"
+            :class="{ error: firstNameError }"
           />
-          <p v-if="nameError" class="input-error">{{ nameError }}</p>
+          <p v-if="firstNameError" class="input-error">{{ firstNameError }}</p>
         </div>
 
-        <div class="form-group">
+        <div v-if="isSignUp || isProfileUpdate" class="form-group">
+          <label for="lastName">Last Name*</label>
+          <input
+            type="text"
+            id="lastName"
+            v-model="lastName"
+            placeholder="Enter your last name"
+            class="form-input"
+            :class="{ error: lastNameError }"
+          />
+          <p v-if="lastNameError" class="input-error">{{ lastNameError }}</p>
+        </div>
+
+        <div v-if="!isProfileUpdate" class="form-group">
           <label for="email">Email*</label>
           <input
             type="email"
@@ -34,7 +51,7 @@
           <p v-if="emailError" class="input-error">{{ emailError }}</p>
         </div>
 
-        <div class="form-group">
+        <div v-if="!isProfileUpdate" class="form-group">
           <label for="password">Password*</label>
           <input
             type="password"
@@ -62,15 +79,15 @@
 
         <div class="modal-actions">
           <button type="submit" class="form-button primary-button">
-            {{ isSignUp ? 'Sign Up' : 'Sign In' }}
+            {{ isProfileUpdate ? 'Update Profile' : (isSignUp ? 'Sign Up' : 'Sign In') }}
           </button>
-          <button type="button" @click="closeModal" class="form-button cancel-button">
+          <button v-if="!isProfileUpdate" type="button" @click="closeModal" class="form-button cancel-button">
             Cancel
           </button>
         </div>
       </form>
 
-      <div class="auth-toggle">
+      <div v-if="!isProfileUpdate" class="auth-toggle">
         <p v-if="!isSignUp">
           Don't have an account?
           <a href="#" @click.prevent="toggleMode" class="toggle-link">Sign up here</a>
@@ -92,20 +109,27 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  mode: {
+    type: String,
+    default: 'signin', // 'signin', 'signup', 'profile-update'
+  },
 });
 
-const emit = defineEmits(["close-modal", "login", "signup"]);
+const emit = defineEmits(["close-modal", "login", "signup", "profile-update"]);
 
 const isSignUp = ref(false);
 const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
-const name = ref("");
+const firstName = ref("");
+const lastName = ref("");
 const emailError = ref("");
 const passwordError = ref("");
 const confirmPasswordError = ref("");
-const nameError = ref("");
+const firstNameError = ref("");
+const lastNameError = ref("");
 const authError = ref("");
+const isProfileUpdate = ref(false);
 
 watch(
   () => props.showModal,
@@ -116,16 +140,36 @@ watch(
   }
 );
 
+watch(
+  () => props.mode,
+  (newMode) => {
+    if (newMode === 'profile-update') {
+      isProfileUpdate.value = true;
+      isSignUp.value = false;
+    } else if (newMode === 'signup') {
+      isSignUp.value = true;
+      isProfileUpdate.value = false;
+    } else {
+      isSignUp.value = false;
+      isProfileUpdate.value = false;
+    }
+  },
+  { immediate: true }
+);
+
 const resetForm = () => {
-  name.value = "";
+  firstName.value = "";
+  lastName.value = "";
   email.value = "";
   password.value = "";
   confirmPassword.value = "";
-  nameError.value = "";
+  firstNameError.value = "";
+  lastNameError.value = "";
   emailError.value = "";
   passwordError.value = "";
   confirmPasswordError.value = "";
   authError.value = "";
+  isProfileUpdate.value = false;
 };
 
 const validateForm = () => {
@@ -135,34 +179,45 @@ const validateForm = () => {
   emailError.value = "";
   passwordError.value = "";
   confirmPasswordError.value = "";
-  nameError.value = "";
+  firstNameError.value = "";
+  lastNameError.value = "";
   authError.value = "";
 
-  // Email validation
-  if (!email.value.trim()) {
-    emailError.value = "Email is required";
-    isValid = false;
-  } else if (!/\S+@\S+\.\S+/.test(email.value)) {
-    emailError.value = "Please enter a valid email";
-    isValid = false;
-  }
-
-  // Password validation
-  if (!password.value.trim()) {
-    passwordError.value = "Password is required";
-    isValid = false;
-  } else if (password.value.length < 6) {
-    passwordError.value = "Password must be at least 6 characters";
-    isValid = false;
-  }
-
-  // Sign up specific validations
-  if (isSignUp.value) {
-    if (!name.value.trim()) {
-      nameError.value = "Name is required";
+  // Skip email and password validation for profile updates
+  if (!isProfileUpdate.value) {
+    // Email validation
+    if (!email.value.trim()) {
+      emailError.value = "Email is required";
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(email.value)) {
+      emailError.value = "Please enter a valid email";
       isValid = false;
     }
 
+    // Password validation
+    if (!password.value.trim()) {
+      passwordError.value = "Password is required";
+      isValid = false;
+    } else if (password.value.length < 6) {
+      passwordError.value = "Password must be at least 6 characters";
+      isValid = false;
+    }
+  }
+
+  // Sign up and profile update specific validations
+  if (isSignUp.value || isProfileUpdate.value) {
+    if (!firstName.value.trim()) {
+      firstNameError.value = "First name is required";
+      isValid = false;
+    }
+
+    if (!lastName.value.trim()) {
+      lastNameError.value = "Last name is required";
+      isValid = false;
+    }
+  }
+
+  if (isSignUp.value) {
     if (!confirmPassword.value.trim()) {
       confirmPasswordError.value = "Please confirm your password";
       isValid = false;
@@ -182,15 +237,22 @@ const handleSubmit = async () => {
   authError.value = "";
   passwordError.value = "";
   emailError.value = "";
-  nameError.value = "";
+  firstNameError.value = "";
+  lastNameError.value = "";
   confirmPasswordError.value = "";
 
   try {
-    if (isSignUp.value) {
+    if (isProfileUpdate.value) {
+      await emit("profile-update", {
+        firstName: firstName.value.trim(),
+        lastName: lastName.value.trim()
+      });
+    } else if (isSignUp.value) {
       await emit("signup", {
         email: email.value.trim(),
         password: password.value,
-        name: name.value.trim()
+        firstName: firstName.value.trim(),
+        lastName: lastName.value.trim()
       });
     } else {
       await emit("login", {
@@ -209,7 +271,8 @@ const handleError = (error) => {
   // Reset specific input errors first
   emailError.value = "";
   passwordError.value = "";
-  nameError.value = "";
+  firstNameError.value = "";
+  lastNameError.value = "";
   confirmPasswordError.value = "";
   authError.value = "";
 
@@ -392,6 +455,16 @@ const closeModal = () => {
   background-color: rgba(255, 107, 107, 0.1);
   border: 1px solid rgba(255, 107, 107, 0.3);
   color: #ff6b6b;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 0.9em;
+}
+
+.profile-update-info {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   padding: 12px;
   border-radius: 4px;
   margin-bottom: 20px;

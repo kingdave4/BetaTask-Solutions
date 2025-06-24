@@ -154,7 +154,7 @@ import { db } from '../firebase';
 import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, setDoc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 const { user } = useAuth();
-const userName = computed(() => user.value?.name || 'User');
+const userName = computed(() => user.value?.firstName || 'User');
 
 const todos = ref([]);
 const loading = ref(true);
@@ -218,15 +218,12 @@ onMounted(() => {
     });
     todos.value = fetchedTodos;
     loading.value = false;
-    console.log("User-specific todos fetched from Firestore:", fetchedTodos);
   }, (err) => {
-    console.error("Error fetching todos from Firestore:", err);
     error.value = "Failed to load tasks from Firestore.";
     loading.value = false;
   });
 });
 
-// Computed properties for task summaries
 const overdueCount = computed(() => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -277,7 +274,6 @@ const incompleteTodos = computed(() => {
     });
 });
 
-// Computed property for completed todos
 const completedTodos = computed(() => {
   return todos.value
     .filter(todo => todo.isCompleted)
@@ -292,20 +288,17 @@ const upcomingTasks = computed(() => {
     .slice(0, 5);
 });
 
-// Helper to format date
 const formatDate = (dateString) => {
   if (!dateString) return 'No Due Date';
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
   return new Date(dateString).toLocaleDateString(undefined, options);
 };
 
-// Helper to get completed subtasks count
 const getCompletedSubtasksCount = (task) => {
   if (!task.subtasks) return 0;
   return task.subtasks.filter(subtask => subtask.isCompleted).length;
 };
 
-// Helper to get priority class based on due date
 const getPriorityClass = (dueDate) => {
   if (!dueDate) return 'no-priority';
   
@@ -329,7 +322,6 @@ const getPriorityClass = (dueDate) => {
   return 'low-priority';
 };
 
-// Helper to get priority text
 const getPriorityText = (dueDate) => {
   if (!dueDate) return 'No Priority';
   
@@ -353,7 +345,7 @@ const getPriorityText = (dueDate) => {
   return 'Later';
 };
 
-// Quick Add Todo function
+
 const quickAddTodo = async () => {
   if (!quickTaskTitle.value.trim() || isAdding.value) return;
 
@@ -375,9 +367,7 @@ const quickAddTodo = async () => {
     const todoRef = doc(db, "todos", newTodoId);
     await setDoc(todoRef, newTodo);
     quickTaskTitle.value = '';
-    console.log("Quick todo added to Firestore:", newTodo);
   } catch (err) {
-    console.error("Error adding quick todo to Firestore:", err);
     error.value = "Failed to add task.";
   } finally {
     isAdding.value = false;
@@ -386,11 +376,9 @@ const quickAddTodo = async () => {
 
 // Drag and Drop functions
 const handleDragStart = (event, todo) => {
-  // Store the entire todo object in the ref
   draggedTodo.value = todo;
   event.dataTransfer.effectAllowed = 'move';
   
-  // Add visual feedback to the dragged item
   event.target.style.opacity = '0.5';
 };
 
@@ -444,20 +432,16 @@ const handleDrop = async (event, targetZone) => {
       break;
   }
   
-  // Show loading state
   const taskElement = document.querySelector(`[data-task-id="${todo.id}"]`);
   if (taskElement) {
     taskElement.style.opacity = '0.5';
   }
   
-  // Update the todo in Firestore
   try {
     const todoRef = doc(db, "todos", todo.id);
     await updateDoc(todoRef, updatePayload);
-    console.log("Todo updated in Firestore:", todo.id, updatePayload);
     draggedTodo.value = null;
   } catch (err) {
-    console.error("Error updating todo in Firestore:", err);
     error.value = "Failed to update task. Please try again.";
   } finally {
     const taskElement = document.querySelector(`[data-task-id="${todo.id}"]`);
@@ -467,7 +451,6 @@ const handleDrop = async (event, targetZone) => {
   }
 };
 
-// Helper function to determine current task status
 const getCurrentTaskStatus = (todo) => {
   if (todo.isCompleted) return 'completed';
   
@@ -492,7 +475,6 @@ const getCurrentTaskStatus = (todo) => {
   margin: 0 auto;
 }
 
-/* Welcome Section */
 .welcome-section {
   text-align: center;
   margin-bottom: 30px;
@@ -514,7 +496,6 @@ const getCurrentTaskStatus = (todo) => {
   opacity: 0.9;
 }
 
-/* Quick Add Section */
 .quick-add-section {
   background-color: #2a2a2a;
   padding: 20px;
