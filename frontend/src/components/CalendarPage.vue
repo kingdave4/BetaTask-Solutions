@@ -303,7 +303,6 @@ async function fetchTodos() {
   
   try {
     const todosCollectionRef = collection(db, "todos");
-    // Only fetch todos that belong to the current user
     const q = query(todosCollectionRef, where("userId", "==", user.value.userId));
 
     onSnapshot(q, (snapshot) => {
@@ -313,14 +312,11 @@ async function fetchTodos() {
       });
       todos.value = fetchedTodos;
       loading.value = false;
-      console.log("User-specific todos fetched from Firestore:", fetchedTodos);
     }, (err) => {
-      console.error("Error fetching todos from Firestore:", err);
       error.value = "Failed to load todos from Firestore.";
       loading.value = false;
     });
   } catch (err) {
-    console.error("Error setting up todos listener:", err);
     error.value = "Failed to load todos.";
     loading.value = false;
   }
@@ -336,7 +332,6 @@ function getTasksForDate(dateKey) {
 
 function getTasksForDateTime(dateObj, hour) {
   return getTasksForDate(dateObj.dateKey).filter(task => {
-    // For simplicity, distribute tasks across hours based on their ID
     return (task.id % 24) === hour;
   });
 }
@@ -430,7 +425,6 @@ function handleDragOver(event, dateKey) {
 }
 
 function handleDragLeave() {
-  // Only clear if we're not dragging over a child element
   setTimeout(() => {
     if (!dragOverDate.value) return;
     dragOverDate.value = null;
@@ -454,9 +448,7 @@ async function updateTaskDueDate(taskId, newDueDate) {
     await updateDoc(todoRef, {
       dueDate: newDueDate
     });
-    console.log("Task due date updated in Firestore for ID:", taskId);
   } catch (err) {
-    console.error("Error updating task due date in Firestore:", err);
     error.value = "Failed to update task date.";
   }
 }
@@ -476,27 +468,20 @@ async function toggleTaskComplete(task) {
     await updateDoc(todoRef, {
       isCompleted: !task.isCompleted
     });
-    console.log("Task completion toggled in Firestore for ID:", task.id);
     closeTaskDetail();
   } catch (err) {
-    console.error("Error toggling task completion in Firestore:", err);
     error.value = "Failed to update task status.";
   }
 }
 
 function editTask(task) {
-  // This would typically emit an event to the parent or use a modal
-  // For now, we'll just close the detail view
   closeTaskDetail();
-  // TODO: Implement edit functionality
 }
 
-// Lifecycle
 onMounted(() => {
   fetchTodos();
 });
 
-// Watch for auth changes
 watch(user, () => {
   fetchTodos();
 });
