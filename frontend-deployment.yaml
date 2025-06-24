@@ -15,5 +15,6 @@ spec:
       containers:
         - name: frontend
           image: todocrdev123.azurecr.io/todolist-frontend:d1d03de5396daf02136f45ec9bf156463ac6c9df
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
