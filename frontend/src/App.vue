@@ -3,7 +3,7 @@
     <header class="app-header">
       <div class="app-title">BetaTask</div>
       <div class="auth-section" v-if="isAuthenticated">
-        <span class="welcome-text">Welcome, {{ user.name }}!</span>
+        <span class="welcome-text">Welcome, {{ user.firstName }}!</span>
         <button @click="handleLogout" class="logout-btn">Logout</button>
       </div>
     </header>
@@ -36,6 +36,10 @@
              <button @click="currentView = 'calendar'" :class="{ active: currentView === 'calendar' }">Calendar</button>
              <button @click="currentView = 'notes'" :class="{ active: currentView === 'notes' }">Notes</button>
              <button @click="currentView = 'tags'" :class="{ active: currentView === 'tags' }">🏷️ Tags Manager</button>
+             <button @click="currentView = 'notifications'" :class="{ active: currentView === 'notifications' }" class="notifications-nav-btn">
+               🔔 Notifications
+               <span v-if="unreadNotificationCount > 0" class="unread-badge">{{ unreadNotificationCount }}</span>
+             </button>
           </div>
         </aside>
 
@@ -54,6 +58,10 @@
 
           <div v-if="currentView === 'tags'">
             <TagsManager :todos="todos" />
+          </div>
+
+          <div v-if="currentView === 'notifications'">
+            <NotificationCenter />
           </div>
 
           <div v-if="currentView === 'todos'">
@@ -79,6 +87,7 @@
                 @toggle-complete="toggleComplete"
                 @delete-todo="deleteTodo"
                 @edit-todo="editTodo"
+                @manage-reminders="handleManageReminders"
               />
               <li v-if="filteredAndSortedTodos.length === 0 && !loading" class="no-tasks">
                 {{
@@ -92,10 +101,12 @@
     </main>
 
     <LoginModal
-      :show-modal="showLoginModal"
-      @close-modal="showLoginModal = false"
+      :show-modal="showLoginModal || showProfileUpdateModal"
+      :mode="showProfileUpdateModal ? 'profile-update' : loginModalMode"
+      @close-modal="() => { showLoginModal = false; }"
       @login="handleLogin"
       @signup="handleSignup"
+      @profile-update="handleProfileUpdate"
       ref="loginModalRef"
     />
     <AddTodoModal
@@ -105,12 +116,19 @@
       @add-todo="addTodo"
       @edit-todo="handleEditTodo"
     />
+    <ReminderModal
+      :show-modal="showReminderModal"
+      :todo="currentReminderTodo"
+      @close-modal="() => { showReminderModal = false; currentReminderTodo = null; }"
+      @reminders-updated="handleRemindersUpdated"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import { useAuth } from "./composables/useAuth";
+import { useNotifications } from "./composables/useNotifications";
 import { db } from "./firebase";
 import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import TodoItem from "./components/TodoItem.vue";
@@ -121,24 +139,36 @@ import DashboardPage from "./components/DashboardPage.vue";
 import CalendarPage from "./components/CalendarPage.vue";
 import Notes from "./components/Notes.vue";
 import TagsManager from "./components/TagsManager.vue";
+import NotificationCenter from "./components/NotificationCenter.vue";
+import ReminderModal from "./components/ReminderModal.vue";
 
 const todos = ref([]);
 const loading = ref(false);
 const error = ref(null);
 const showModal = ref(false);
 const showLoginModal = ref(false);
+const showReminderModal = ref(false);
 const currentTodo = ref(null);
+const currentReminderTodo = ref(null);
 const loginModalRef = ref(null);
 
 // Auth state from composable
-const { user, isAuthenticated, login, signup, logout, initAuth } = useAuth();
+const { user, isAuthenticated, login, signup, updateUserProfile, logout, initAuth } = useAuth();
+const { unreadCount: unreadNotificationCount } = useNotifications();
 const currentView = ref('dashboard');
+
+watch(() => user.value, (newUser) => {
+}, { immediate: true });
 
 const currentFilter = ref("all");
 const categoryFilter = ref("");
 const tagFilter = ref("");
 const sortBy = ref("createdAt");
 const sortDirection = ref("desc");
+
+const showProfileUpdateModal = computed(() => user.value?.needsProfileUpdate);
+const loginModalMode = ref('signin');
+
 
 async function fetchTodos() {
   if (!isAuthenticated.value || !user.value?.userId) {
@@ -151,7 +181,6 @@ async function fetchTodos() {
   
   try {
     const todosCollectionRef = collection(db, "todos");
-    // Only fetch todos that belong to the current user
     const q = query(todosCollectionRef, where("userId", "==", user.value.userId));
 
     onSnapshot(q, (snapshot) => {
@@ -161,9 +190,7 @@ async function fetchTodos() {
       });
       todos.value = fetchedTodos;
       loading.value = false;
-      console.log("User-specific todos fetched from Firestore:", fetchedTodos);
     }, (err) => {
-      console.error("Error fetching todos from Firestore:", err);
       error.value = "Failed to load todos from Firestore.";
       loading.value = false;
     });
@@ -259,7 +286,6 @@ const handleLogin = async (userData) => {
     await login(userData.email, userData.password);
     error.value = null;
     showLoginModal.value = false;
-    await fetchTodos();
   } catch (err) {
     if (loginModalRef.value) {
       loginModalRef.value.handleError(err);
@@ -269,10 +295,19 @@ const handleLogin = async (userData) => {
 
 const handleSignup = async (userData) => {
   try {
-    await signup(userData.email, userData.password, userData.name);
+    await signup(userData.email, userData.password, userData.firstName, userData.lastName);
     error.value = null;
     showLoginModal.value = false;
-    await fetchTodos();
+  } catch (err) {
+    if (loginModalRef.value) {
+      loginModalRef.value.handleError(err);
+    }
+  }
+};
+
+const handleProfileUpdate = async (userData) => {
+  try {
+    await updateUserProfile(userData.firstName, userData.lastName);
   } catch (err) {
     if (loginModalRef.value) {
       loginModalRef.value.handleError(err);
@@ -288,6 +323,16 @@ const handleLogout = async () => {
   } catch (err) {
     error.value = "Failed to logout. Please try again.";
   }
+};
+
+const handleManageReminders = (todo) => {
+  currentReminderTodo.value = todo;
+  showReminderModal.value = true;
+};
+
+const handleRemindersUpdated = () => {
+  showReminderModal.value = false;
+  currentReminderTodo.value = null;
 };
 
 function handleAddTodoClick() {
@@ -311,6 +356,15 @@ onMounted(() => {
 watch(currentView, (newView) => {
   if (newView === 'todos' && isAuthenticated.value) {
     fetchTodos();
+  }
+});
+
+// Watch for auth state changes to fetch todos
+watch(isAuthenticated, (authenticated) => {
+  if (authenticated) {
+    fetchTodos();
+  } else {
+    todos.value = [];
   }
 });
 
@@ -604,6 +658,28 @@ body {
   background-color: #e9e9e9;
   color: #000;
   font-weight: bold;
+}
+
+.notifications-nav-btn {
+  position: relative;
+}
+
+.notifications-nav-btn .unread-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.7em;
+  font-weight: bold;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 
