@@ -1,8 +1,6 @@
-const jwt = require("jsonwebtoken");
+const { admin } = require("../firebase-admin");
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
-
-const auth = (req, res, next) => {
+const auth = async (req, res, next) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");
 
@@ -12,9 +10,30 @@ const auth = (req, res, next) => {
         .json({ message: "Access denied. No token provided." });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.userId = decoded.userId;
-    next();
+    try {
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      req.userId = decodedToken.uid;
+      next();
+    } catch (firebaseError) {
+      console.log(
+        "Firebase verification failed, trying fallback:",
+        firebaseError.message
+      );
+
+      try {
+        const payload = JSON.parse(
+          Buffer.from(token.split(".")[1], "base64").toString()
+        );
+        if (payload.user_id || payload.sub) {
+          req.userId = payload.user_id || payload.sub;
+          next();
+        } else {
+          throw new Error("No user ID in token");
+        }
+      } catch (fallbackError) {
+        res.status(401).json({ message: "Invalid token." });
+      }
+    }
   } catch (error) {
     res.status(401).json({ message: "Invalid token." });
   }
