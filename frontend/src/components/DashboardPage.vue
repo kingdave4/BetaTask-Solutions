@@ -198,8 +198,6 @@ const productivityTip = computed(() => {
   return tips[today % tips.length];
 });
 
-// Fetch todos for the logged-in user
-// Fetch todos for the logged-in user using real-time listener
 onMounted(() => {
   if (!user.value?.userId) {
     todos.value = [];
@@ -208,7 +206,6 @@ onMounted(() => {
   }
 
   const todosCollectionRef = collection(db, "todos");
-  // Only fetch todos that belong to the current user
   const q = query(todosCollectionRef, where("userId", "==", user.value.userId));
 
   onSnapshot(q, (snapshot) => {
@@ -262,7 +259,6 @@ const completedCount = computed(() => {
   return todos.value.filter(todo => todo.isCompleted).length;
 });
 
-// Computed property for incomplete todos (for dragging)
 const incompleteTodos = computed(() => {
   return todos.value
     .filter(todo => !todo.isCompleted)
@@ -407,7 +403,6 @@ const handleDrop = async (event, targetZone) => {
   const todo = draggedTodo.value;
   let updatePayload = {};
   
-  // Determine what to update based on the target zone
   switch (targetZone) {
     case 'completed':
       updatePayload = { isCompleted: true };

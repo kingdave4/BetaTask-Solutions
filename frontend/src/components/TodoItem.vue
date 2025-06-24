@@ -65,6 +65,9 @@
       <button @click="handleToggleComplete" class="complete-btn">
         {{ todo.isCompleted ? "Mark Incomplete" : "Mark Complete" }}
       </button>
+      <button @click="handleReminders" class="reminders-btn" :disabled="todo.isCompleted">
+        ⏰ Reminders
+      </button>
       <button @click="handleDelete" class="delete-btn">Delete</button>
       <button @click="handleEdit" class="edit-btn" :disabled="todo.isCompleted">Edit</button>
     </div>
@@ -83,7 +86,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["edit-todo"]);
+const emit = defineEmits(["edit-todo", "manage-reminders"]);
 
 // Computed properties for subtasks
 const completedSubtasksCount = computed(() => {
@@ -176,7 +179,6 @@ const toggleSubtask = async (index) => {
     }
     
     await updateDoc(todoRef, updateData);
-    console.log("Subtask toggled for todo ID: ", props.todo.id);
   } catch (e) {
     console.error("Error toggling subtask: ", e);
   }
@@ -199,7 +201,6 @@ const handleToggleComplete = async () => {
     }
     
     await updateDoc(todoRef, updateData);
-    console.log("Todo completion toggled for ID: ", props.todo.id);
   } catch (e) {
     console.error("Error toggling todo completion: ", e);
   }
@@ -208,7 +209,6 @@ const handleToggleComplete = async () => {
 const handleDelete = async () => {
   try {
     await deleteDoc(doc(db, "todos", props.todo.id));
-    console.log("Todo deleted with ID: ", props.todo.id);
   } catch (e) {
     console.error("Error deleting todo: ", e);
   }
@@ -216,6 +216,10 @@ const handleDelete = async () => {
 
 const handleEdit = () => {
   emit("edit-todo", props.todo.id);
+};
+
+const handleReminders = () => {
+  emit("manage-reminders", props.todo);
 };
 </script>
 
@@ -461,6 +465,19 @@ const handleEdit = () => {
   border-color: #1e7e34;
 }
 .edit-btn:disabled {
+  opacity: 0.1;
+  cursor: not-allowed;
+}
+.reminders-btn {
+  background-color: #ffd93d;
+  color: #333;
+  border: 1px solid #ffcd00;
+}
+.reminders-btn:hover:not(:disabled) {
+  background-color: #ffcd00;
+  border-color: #e6b800;
+}
+.reminders-btn:disabled {
   opacity: 0.1;
   cursor: not-allowed;
 }

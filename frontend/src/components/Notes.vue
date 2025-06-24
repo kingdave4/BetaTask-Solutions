@@ -119,7 +119,6 @@ onMounted(() => {
       fetchedNotes.push({ id: doc.id, ...doc.data() });
     });
     notes.value = fetchedNotes;
-    console.log("User-specific notes fetched from Firestore:", fetchedNotes);
   }, (err) => {
     console.error("Error fetching notes from Firestore:", err);
   });
@@ -139,7 +138,6 @@ const createNote = async () => {
     };
     await addDoc(collection(db, "notes"), noteData);
     cancelNewNote();
-    console.log("New note added with ID: ", newNoteId);
   } catch (error) {
     console.error('Error creating note:', error);
   }
@@ -156,7 +154,6 @@ const updateNote = async () => {
     };
     await updateDoc(noteRef, updatedData);
     cancelEdit();
-    console.log("Note updated with ID: ", editingNote.value.id);
   } catch (error) {
     console.error('Error updating note:', error);
   }
@@ -165,7 +162,6 @@ const updateNote = async () => {
 const deleteNote = async (noteId) => {
   try {
     await deleteDoc(doc(db, "notes", noteId));
-    console.log("Note deleted with ID: ", noteId);
   } catch (error) {
     console.error('Error deleting note:', error);
   }
