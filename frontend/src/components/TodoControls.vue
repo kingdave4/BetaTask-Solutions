@@ -87,7 +87,6 @@ const emit = defineEmits([
 
 const { user, loading } = useAuth();
 
-// Reactive data
 const availableTags = ref([]);
 
 // Predefined categories
@@ -128,7 +127,6 @@ const sortDirectionModel = computed({
   set: (value) => emit("update:sortDirection", value),
 });
 
-// Load available tags
 const loadAvailableTags = () => {
   if (!user.value?.userId) return;
   

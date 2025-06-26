@@ -88,7 +88,6 @@ const props = defineProps({
 
 const emit = defineEmits(["edit-todo", "manage-reminders"]);
 
-// Computed properties for subtasks
 const completedSubtasksCount = computed(() => {
   if (!props.todo.subtasks) return 0;
   return props.todo.subtasks.filter(subtask => subtask.isCompleted).length;
