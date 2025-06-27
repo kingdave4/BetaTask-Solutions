@@ -321,6 +321,26 @@ const formatTime = (dateString) => {
 </script>
 
 <style scoped>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #252525;
+  border-radius: 8px;
+  border: 1px solid #444;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
 .reminder-modal {
   max-width: 600px;
   max-height: 80vh;
