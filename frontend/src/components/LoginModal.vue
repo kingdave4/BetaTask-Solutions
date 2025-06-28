@@ -185,23 +185,23 @@ const validateForm = () => {
 
   // Skip email and password validation for profile updates
   if (!isProfileUpdate.value) {
-    // Email validation
-    if (!email.value.trim()) {
-      emailError.value = "Email is required";
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email.value)) {
-      emailError.value = "Please enter a valid email";
-      isValid = false;
-    }
+  // Email validation
+  if (!email.value.trim()) {
+    emailError.value = "Email is required";
+    isValid = false;
+  } else if (!/\S+@\S+\.\S+/.test(email.value)) {
+    emailError.value = "Please enter a valid email";
+    isValid = false;
+  }
 
-    // Password validation
-    if (!password.value.trim()) {
-      passwordError.value = "Password is required";
-      isValid = false;
-    } else if (password.value.length < 6) {
-      passwordError.value = "Password must be at least 6 characters";
-      isValid = false;
-    }
+  // Password validation
+  if (!password.value.trim()) {
+    passwordError.value = "Password is required";
+    isValid = false;
+  } else if (password.value.length < 6) {
+    passwordError.value = "Password must be at least 6 characters";
+    isValid = false;
+  }
   }
 
   // Sign up and profile update specific validations

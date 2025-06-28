@@ -126,7 +126,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useAuth } from "./composables/useAuth";
 import { useNotifications } from "./composables/useNotifications";
 import { db } from "./firebase";
@@ -141,6 +141,7 @@ import Notes from "./components/Notes.vue";
 import TagsManager from "./components/TagsManager.vue";
 import NotificationCenter from "./components/NotificationCenter.vue";
 import ReminderModal from "./components/ReminderModal.vue";
+import apiService from "./services/api.js";
 
 const todos = ref([]);
 const loading = ref(false);
@@ -153,11 +154,14 @@ const currentReminderTodo = ref(null);
 const loginModalRef = ref(null);
 
 // Auth state from composable
-const { user, isAuthenticated, login, signup, updateUserProfile, logout, initAuth } = useAuth();
+const { user, isAuthenticated, login, signup, updateUserProfile, refreshToken, checkAndRefreshToken, logout, initAuth } = useAuth();
 const { unreadCount: unreadNotificationCount } = useNotifications();
 const currentView = ref('dashboard');
 
 watch(() => user.value, (newUser) => {
+  if (newUser?.token) {
+    apiService.setAuthToken(newUser.token);
+  }
 }, { immediate: true });
 
 const currentFilter = ref("all");
@@ -346,6 +350,21 @@ function handleAddTodoClick() {
 
 // Initialize auth state from localStorage
 onMounted(() => {
+  // Set up token refresh callback for API service
+  apiService.setTokenRefreshCallback(refreshToken);
+  
+  // Set up periodic token expiration check (every 5 minutes)
+  const tokenCheckInterval = setInterval(() => {
+    if (isAuthenticated.value) {
+      checkAndRefreshToken();
+    }
+  }, 5 * 60 * 1000); // 5 minutes
+  
+  // Clean up interval on unmount
+  onUnmounted(() => {
+    clearInterval(tokenCheckInterval);
+  });
+  
   if (isAuthenticated.value) {
     currentView.value = 'dashboard';
   }

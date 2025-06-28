@@ -209,11 +209,17 @@ const formatDate = (dateString) => {
   margin-bottom: 20px;
 }
 
+.notes-header h2 {
+  color: #333;
+  margin: 0;
+}
+
 .note-form {
-  background: #f5f5f5;
+  background: #f8f9fa;
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 20px;
+  border: 1px solid #e9ecef;
 }
 
 .note-title-input {
@@ -222,6 +228,7 @@ const formatDate = (dateString) => {
   margin-bottom: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  box-sizing: border-box;
 }
 
 .note-content-input {
@@ -232,6 +239,7 @@ const formatDate = (dateString) => {
   border: 1px solid #ddd;
   border-radius: 4px;
   resize: vertical;
+  box-sizing: border-box;
 }
 
 .note-task-select {
@@ -240,6 +248,7 @@ const formatDate = (dateString) => {
   margin-bottom: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  box-sizing: border-box;
 }
 
 .note-actions {
@@ -254,10 +263,11 @@ const formatDate = (dateString) => {
 }
 
 .note-card {
-  background: black;
+  background: white;
   padding: 15px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
 }
 
 .note-header {
@@ -267,9 +277,15 @@ const formatDate = (dateString) => {
   margin-bottom: 10px;
 }
 
+.note-header h3 {
+  color: #333;
+  margin: 0;
+}
+
 .note-content {
   margin-bottom: 10px;
   white-space: pre-wrap;
+  color: #666;
 }
 
 .note-linked-task {
@@ -293,6 +309,7 @@ const formatDate = (dateString) => {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
 .modal-content {
@@ -301,6 +318,11 @@ const formatDate = (dateString) => {
   border-radius: 8px;
   width: 90%;
   max-width: 600px;
+}
+
+.modal-content h3 {
+  color: #333;
+  margin-top: 0;
 }
 
 .modal-actions {
@@ -317,6 +339,11 @@ const formatDate = (dateString) => {
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: #45a049;
 }
 
 .btn-secondary {
@@ -325,6 +352,12 @@ const formatDate = (dateString) => {
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
+  color: #333;
+  transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: #e9ecef;
 }
 
 .btn-icon {
@@ -333,5 +366,11 @@ const formatDate = (dateString) => {
   cursor: pointer;
   font-size: 1.2em;
   padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-icon:hover {
+  background: #f8f9fa;
 }
 </style> 
