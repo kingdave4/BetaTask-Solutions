@@ -295,7 +295,7 @@ defineExpose({
 }
 
 .manager-header h3 {
-  color: #e0e0e0;
+  color: #333;
   margin: 0;
 }
 
@@ -314,11 +314,11 @@ defineExpose({
 }
 
 .add-tag-form {
-  background: #2a2a2a;
+  background: #f8f9fa;
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 30px;
-  border: 1px solid #444;
+  border: 1px solid #e9ecef;
 }
 
 .form-row {
@@ -331,16 +331,16 @@ defineExpose({
 .tag-input {
   flex: 1;
   padding: 8px 12px;
-  background: #333;
-  border: 1px solid #555;
+  background: white;
+  border: 1px solid #ddd;
   border-radius: 4px;
-  color: #e0e0e0;
+  color: #333;
 }
 
 .color-picker {
   width: 40px;
   height: 38px;
-  border: 1px solid #555;
+  border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
 }
@@ -355,12 +355,12 @@ defineExpose({
 }
 
 .add-btn:disabled {
-  background: #666;
+  background: #ccc;
   cursor: not-allowed;
 }
 
 .form-hint {
-  color: #aaa;
+  color: #666;
   font-size: 0.9em;
   margin: 0;
 }
@@ -372,7 +372,7 @@ defineExpose({
 
 .categories-section h4,
 .custom-tags-section h4 {
-  color: #e0e0e0;
+  color: #333;
   margin-bottom: 15px;
 }
 
@@ -383,18 +383,20 @@ defineExpose({
 }
 
 .category-item {
-  background: #2a2a2a;
+  background: white;
   border: 2px solid;
   border-radius: 8px;
   padding: 15px;
   display: flex;
   align-items: center;
   gap: 10px;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .category-item:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .category-icon {
@@ -403,12 +405,12 @@ defineExpose({
 
 .category-name {
   flex: 1;
-  color: #e0e0e0;
+  color: #333;
   font-weight: 500;
 }
 
 .category-count {
-  color: #aaa;
+  color: #666;
   font-size: 0.9em;
 }
 
@@ -419,13 +421,14 @@ defineExpose({
 }
 
 .tag-item {
-  background: #2a2a2a;
-  border: 1px solid #444;
+  background: white;
+  border: 1px solid #e9ecef;
   border-radius: 8px;
   padding: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .tag-info {
@@ -438,16 +441,16 @@ defineExpose({
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 1px solid #555;
+  border: 1px solid #ddd;
 }
 
 .tag-name {
-  color: #e0e0e0;
+  color: #333;
   font-weight: 500;
 }
 
 .tag-count {
-  color: #aaa;
+  color: #666;
   font-size: 0.9em;
 }
 
@@ -468,16 +471,16 @@ defineExpose({
 }
 
 .edit-btn:hover {
-  background: #444;
+  background: #f8f9fa;
 }
 
 .delete-btn:hover {
-  background: #663;
+  background: #f8d7da;
 }
 
 .empty-state {
   text-align: center;
-  color: #aaa;
+  color: #666;
   font-style: italic;
   padding: 40px 20px;
 }
@@ -489,7 +492,7 @@ defineExpose({
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -497,16 +500,17 @@ defineExpose({
 }
 
 .modal-content {
-  background: #2a2a2a;
+  background: white;
   border-radius: 8px;
   padding: 30px;
   max-width: 400px;
   width: 90%;
-  border: 1px solid #444;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .modal-content h3 {
-  color: #e0e0e0;
+  color: #333;
   margin-bottom: 20px;
   text-align: center;
 }
@@ -533,16 +537,20 @@ defineExpose({
 }
 
 .save-btn:disabled {
-  background: #666;
+  background: #ccc;
   cursor: not-allowed;
 }
 
 .cancel-btn {
-  background: #666;
+  background: #6c757d;
   color: white;
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: #5a6268;
 }
 </style> 

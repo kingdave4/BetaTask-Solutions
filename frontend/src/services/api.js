@@ -4,6 +4,11 @@ const API_BASE_URL =
 class ApiService {
   constructor() {
     this.baseURL = API_BASE_URL;
+    this.refreshTokenCallback = null;
+  }
+
+  setTokenRefreshCallback(callback) {
+    this.refreshTokenCallback = callback;
   }
 
   async request(endpoint, options = {}) {
@@ -16,10 +21,61 @@ class ApiService {
       ...options,
     };
 
+    console.log(`Making API request to: ${endpoint}`);
+    console.log(`Auth token present: ${!!this.authToken}`);
+
     try {
       const response = await fetch(url, config);
+      console.log(`Response status: ${response.status}`);
+
+      // If we get a 401 or 403, try to refresh the token and retry
+      if (
+        (response.status === 401 || response.status === 403) &&
+        this.refreshTokenCallback
+      ) {
+        console.log(
+          "Authentication error detected, attempting token refresh..."
+        );
+        try {
+          console.log("Token expired, attempting refresh...");
+          const newToken = await this.refreshTokenCallback();
+          this.setAuthToken(newToken);
+          console.log("Token refreshed successfully, retrying request...");
+
+          // Retry the request with the new token
+          const retryConfig = {
+            ...config,
+            headers: {
+              ...config.headers,
+              ...this.getAuthHeaders(),
+            },
+          };
+
+          console.log("Retrying request with new token...");
+          const retryResponse = await fetch(url, retryConfig);
+          console.log(`Retry response status: ${retryResponse.status}`);
+
+          if (!retryResponse.ok) {
+            throw new Error(`HTTP error! status: ${retryResponse.status}`);
+          }
+
+          const contentType = retryResponse.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            return await retryResponse.json();
+          }
+
+          return retryResponse;
+        } catch (refreshError) {
+          console.error("Token refresh failed:", refreshError);
+          // If refresh fails, throw the original error
+          throw new Error(`Authentication failed. Please log in again.`);
+        }
+      }
 
       if (!response.ok) {
+        // Log the response body for debugging
+        const responseText = await response.text();
+        console.error(`API Error ${response.status}:`, responseText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -68,7 +124,10 @@ class ApiService {
   async updateReminder(reminderId, reminderData) {
     return this.request(`/reminders/${reminderId}`, {
       method: "PUT",
-      headers: this.getAuthHeaders(),
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(reminderData),
     });
   }

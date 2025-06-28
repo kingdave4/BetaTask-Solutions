@@ -17,6 +17,11 @@
           </p>
         </div>
 
+        <!-- Error Message -->
+        <div v-if="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
+
         <!-- Existing Reminders -->
         <div v-if="reminders.length > 0" class="existing-reminders">
           <h4>Current Reminders</h4>
@@ -69,7 +74,6 @@
                   type="date"
                   id="reminder-date"
                   v-model="newReminderDate"
-                  :min="today"
                   class="form-input"
                   required
                 />
@@ -179,14 +183,11 @@ const loading = ref(false)
 const saving = ref(false)
 const deleting = ref(null)
 const editingReminder = ref(null)
+const errorMessage = ref('')
 
 const newReminderDate = ref('')
 const newReminderTime = ref('')
 const newReminderMessage = ref('')
-
-const today = computed(() => {
-  return new Date().toISOString().split('T')[0]
-})
 
 watch(() => props.showModal, (newValue) => {
   if (newValue && props.todo) {
@@ -205,6 +206,7 @@ const resetForm = () => {
   newReminderTime.value = ''
   newReminderMessage.value = ''
   editingReminder.value = null
+  errorMessage.value = ''
 }
 
 const fetchReminders = async () => {
@@ -222,23 +224,49 @@ const fetchReminders = async () => {
 }
 
 const submitReminder = async () => {
-  if (!newReminderDate.value || !newReminderTime.value) return
+  errorMessage.value = ''
+  if (!newReminderDate.value || !newReminderTime.value) {
+    errorMessage.value = 'Please select both date and time for the reminder'
+    return
+  }
 
   saving.value = true
   try {
     const reminderDateTime = `${newReminderDate.value}T${newReminderTime.value}:00`
-    const payload = {
-      todoId: props.todo.id,
-      reminderDateTime,
-      message: newReminderMessage.value || `Reminder for: ${props.todo.title}`
+    const reminderDate = new Date(reminderDateTime)
+    const now = new Date()
+    
+    // Check if the reminder time is in the past
+    if (reminderDate <= now) {
+      const selectedDate = new Date(newReminderDate.value + 'T00:00:00')
+      const todayDate = new Date(now.toISOString().split('T')[0] + 'T00:00:00')
+      
+      if (selectedDate < todayDate) {
+        errorMessage.value = 'Cannot set reminder for a past date'
+      } else if (selectedDate.getTime() === todayDate.getTime()) {
+        errorMessage.value = 'Cannot set reminder for a past time today'
+      } else {
+        errorMessage.value = 'Cannot set reminder in the past'
+      }
+      saving.value = false
+      return
     }
-
+    
     apiService.setAuthToken(user.value.token)
     
     if (editingReminder.value) {
-      await apiService.updateReminder(editingReminder.value.id, payload)
+      const updatePayload = {
+        reminderDateTime,
+        message: newReminderMessage.value || `Reminder for: ${props.todo.title}`
+      }
+      await apiService.updateReminder(editingReminder.value.id, updatePayload)
     } else {
-      await apiService.createReminder(payload)
+      const createPayload = {
+        todoId: props.todo.id,
+        reminderDateTime,
+        message: newReminderMessage.value || `Reminder for: ${props.todo.title}`
+      }
+      await apiService.createReminder(createPayload)
     }
 
     await fetchReminders()
@@ -246,6 +274,7 @@ const submitReminder = async () => {
     emit('reminders-updated')
   } catch (error) {
     console.error('Error saving reminder:', error)
+    errorMessage.value = error.message || 'Failed to save reminder. Please try again.'
   } finally {
     saving.value = false
   }
@@ -280,10 +309,15 @@ const deleteReminder = async (reminderId) => {
 }
 
 const setQuickReminder = (type) => {
-  if (!props.todo?.dueDate) return
+  errorMessage.value = ''
+  if (!props.todo?.dueDate) {
+    errorMessage.value = 'Please set a due date for this todo to use quick reminders'
+    return
+  }
 
   const dueDate = new Date(props.todo.dueDate + 'T00:00:00')
   let reminderDate = new Date(dueDate)
+  const now = new Date()
 
   switch (type) {
     case '1hour':
@@ -297,8 +331,18 @@ const setQuickReminder = (type) => {
       break
   }
 
-  if (reminderDate <= new Date()) {
-    alert('Cannot set reminder in the past')
+  // Check if the calculated reminder time is in the past
+  if (reminderDate <= now) {
+    const timeDiff = Math.ceil((dueDate - now) / (1000 * 60 * 60)) // hours until due
+    if (timeDiff <= 0) {
+      errorMessage.value = 'This task is already due or overdue'
+    } else if (timeDiff < 1) {
+      errorMessage.value = `Task is due in less than 1 hour. You can set a manual reminder for a future time.`
+    } else if (timeDiff < 24) {
+      errorMessage.value = `Task is due in less than 1 day. You can set a manual reminder for a future time.`
+    } else {
+      errorMessage.value = 'Cannot set reminder in the past'
+    }
     return
   }
 
@@ -404,6 +448,17 @@ const formatTime = (dateString) => {
 .due-date {
   margin: 0;
   color: #42b983;
+  font-size: 0.9em;
+}
+
+.error-message {
+  background-color: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  color: #ff6b6b;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  text-align: center;
   font-size: 0.9em;
 }
 

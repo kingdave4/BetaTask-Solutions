@@ -1,29 +1,65 @@
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onUnmounted } from "vue";
 import { useAuth } from "./useAuth";
+import { db } from "../firebase";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
+  limit,
+} from "firebase/firestore";
 import apiService from "../services/api";
 
 const notifications = ref([]);
 const unreadCount = ref(0);
 const loading = ref(false);
 
+let unsubscribeNotifications = null;
+
 export function useNotifications() {
   const { user } = useAuth();
 
-  const fetchUnreadCount = async () => {
-    if (!user.value?.token) {
+  const setupNotificationListener = () => {
+    if (!user.value?.userId) {
+      notifications.value = [];
       unreadCount.value = 0;
       return;
     }
 
+    loading.value = true;
+
     try {
-      apiService.setAuthToken(user.value.token);
-      const unreadNotifications = await apiService.getNotifications({
-        unreadOnly: "true",
-        limit: "100",
-      });
-      unreadCount.value = unreadNotifications.length;
+      const notificationsRef = collection(db, "notifications");
+      const q = query(
+        notificationsRef,
+        where("userId", "==", user.value.userId),
+        orderBy("createdAt", "desc"),
+        limit(100)
+      );
+
+      unsubscribeNotifications = onSnapshot(
+        q,
+        (snapshot) => {
+          const fetchedNotifications = [];
+          snapshot.forEach((doc) => {
+            fetchedNotifications.push({ id: doc.id, ...doc.data() });
+          });
+
+          notifications.value = fetchedNotifications;
+          unreadCount.value = fetchedNotifications.filter(
+            (n) => !n.isRead
+          ).length;
+          loading.value = false;
+        },
+        (error) => {
+          console.error("Error listening to notifications:", error);
+          loading.value = false;
+        }
+      );
     } catch (error) {
-      unreadCount.value = 0;
+      console.error("Error setting up notifications listener:", error);
+      loading.value = false;
     }
   };
 
@@ -31,10 +67,7 @@ export function useNotifications() {
     try {
       apiService.setAuthToken(user.value.token);
       await apiService.markNotificationAsRead(notificationId);
-
-      if (unreadCount.value > 0) {
-        unreadCount.value--;
-      }
+      // The real-time listener will automatically update the local state
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
@@ -43,49 +76,60 @@ export function useNotifications() {
   const markAllAsRead = async () => {
     try {
       apiService.setAuthToken(user.value.token);
-      const unreadNotifications = await apiService.getNotifications({
-        unreadOnly: "true",
-        limit: "100",
-      });
+      const unreadNotifications = notifications.value.filter((n) => !n.isRead);
 
       for (const notification of unreadNotifications) {
         await apiService.markNotificationAsRead(notification.id);
       }
-
-      unreadCount.value = 0;
+      // The real-time listener will automatically update the local state
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
     }
   };
 
+  const deleteNotification = async (notificationId) => {
+    try {
+      apiService.setAuthToken(user.value.token);
+      await apiService.deleteNotification(notificationId);
+      // The real-time listener will automatically update the local state
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
+  };
+
+  // Set up listener when user changes
   watch(
     () => user.value,
     (newUser) => {
+      // Clean up previous listener
+      if (unsubscribeNotifications) {
+        unsubscribeNotifications();
+        unsubscribeNotifications = null;
+      }
+
       if (newUser) {
-        fetchUnreadCount();
-
-        const interval = setInterval(() => {
-          if (user.value) {
-            fetchUnreadCount();
-          } else {
-            clearInterval(interval);
-          }
-        }, 30000);
-
-        return () => clearInterval(interval);
+        setupNotificationListener();
       } else {
+        notifications.value = [];
         unreadCount.value = 0;
       }
     },
     { immediate: true }
   );
 
+  // Clean up listener on unmount
+  onUnmounted(() => {
+    if (unsubscribeNotifications) {
+      unsubscribeNotifications();
+    }
+  });
+
   return {
     notifications,
     unreadCount,
     loading,
-    fetchUnreadCount,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
   };
 }
