@@ -82,7 +82,6 @@
 import { ref, onMounted, watch } from 'vue';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '../composables/useAuth';
 
 const props = defineProps({
@@ -104,7 +103,15 @@ const newNote = ref({
 });
 
 // Fetch notes using real-time listener
-onMounted(() => {
+let unsubscribeNotes = null;
+
+const loadNotes = () => {
+  // Clean up existing listener
+  if (unsubscribeNotes) {
+    unsubscribeNotes();
+    unsubscribeNotes = null;
+  }
+
   if (!user.value?.userId) {
     notes.value = [];
     return;
@@ -113,22 +120,33 @@ onMounted(() => {
   const notesCollectionRef = collection(db, "notes");
   const q = query(notesCollectionRef, where("userId", "==", user.value.userId));
 
-  onSnapshot(q, (snapshot) => {
+  unsubscribeNotes = onSnapshot(q, (snapshot) => {
     const fetchedNotes = [];
     snapshot.forEach((doc) => {
       fetchedNotes.push({ id: doc.id, ...doc.data() });
     });
+
     notes.value = fetchedNotes;
   }, (err) => {
     console.error("Error fetching notes from Firestore:", err);
+    console.error("Error code:", err.code);
+    console.error("Error message:", err.message);
   });
+};
+
+onMounted(() => {
+  loadNotes();
+});
+
+// Watch for user changes
+watch(() => user.value?.userId, (newUserId) => {
+  loadNotes();
 });
 
 const createNote = async () => {
   try {
-    const newNoteId = uuidv4();
+    
     const noteData = {
-      id: newNoteId,
       title: newNote.value.title,
       content: newNote.value.content,
       linkedTaskId: newNote.value.linkedTaskId || null,
@@ -136,34 +154,83 @@ const createNote = async () => {
       updatedAt: new Date().toISOString(),
       userId: user.value?.userId,
     };
+    
     await addDoc(collection(db, "notes"), noteData);
     cancelNewNote();
   } catch (error) {
-    console.error('Error creating note:', error);
+    alert(`Failed to create note: ${error.message}`);
   }
 };
 
 const updateNote = async () => {
   try {
+    // Check if user is authenticated
+    if (!user.value?.userId) {
+      console.error('User not authenticated');
+      alert('You must be logged in to update notes');
+      return;
+    }
+    
+    // Verify the note belongs to the current user
+    if (editingNote.value.userId !== user.value.userId) {
+      console.error('User ID mismatch - note belongs to different user');
+      alert('You can only update your own notes');
+      return;
+    }
+    
     const noteRef = doc(db, "notes", editingNote.value.id);
     const updatedData = {
       title: editingNote.value.title,
       content: editingNote.value.content,
       linkedTaskId: editingNote.value.linkedTaskId || null,
       updatedAt: new Date().toISOString(),
+      // Preserve the userId to ensure Firestore security rules are satisfied
+      userId: user.value.userId,
     };
+    
     await updateDoc(noteRef, updatedData);
     cancelEdit();
   } catch (error) {
     console.error('Error updating note:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    
+    // Provide more specific error messages
+    if (error.code === 'permission-denied') {
+      alert('Permission denied: You can only update your own notes. Please make sure you are logged in.');
+    } else if (error.code === 'unauthenticated') {
+      alert('Authentication required: Please log in again.');
+    } else {
+      alert(`Failed to update note: ${error.message}`);
+    }
   }
 };
 
 const deleteNote = async (noteId) => {
   try {
-    await deleteDoc(doc(db, "notes", noteId));
+    // Check if user is authenticated
+    if (!user.value?.userId) {
+      console.error('User not authenticated');
+      alert('You must be logged in to delete notes');
+      return;
+    }
+    
+    if (confirm('Are you sure you want to delete this note?')) {
+      await deleteDoc(doc(db, "notes", noteId));
+    }
   } catch (error) {
     console.error('Error deleting note:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    
+    // Provide more specific error messages
+    if (error.code === 'permission-denied') {
+      alert('Permission denied: You can only delete your own notes. Please make sure you are logged in.');
+    } else if (error.code === 'unauthenticated') {
+      alert('Authentication required: Please log in again.');
+    } else {
+      alert(`Failed to delete note: ${error.message}`);
+    }
   }
 };
 

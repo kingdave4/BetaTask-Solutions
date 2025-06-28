@@ -185,17 +185,14 @@ export function useAuth() {
 
   const refreshToken = async () => {
     try {
-      console.log("Refreshing Firebase token...");
       if (!auth.currentUser) {
         throw new Error("No user logged in");
       }
 
-      const idToken = await auth.currentUser.getIdToken(true); // Force refresh
-      console.log("New token obtained successfully");
+      const idToken = await auth.currentUser.getIdToken(true);
 
       if (user.value) {
         user.value.token = idToken;
-        console.log("User token updated");
       }
 
       return idToken;
@@ -221,9 +218,7 @@ export function useAuth() {
       const now = Math.floor(Date.now() / 1000);
       const expirationTime = payload.exp;
 
-      // Refresh if token expires in the next 5 minutes (300 seconds)
       if (expirationTime - now < 300) {
-        console.log("Token expiring soon, refreshing proactively...");
         await refreshToken();
       }
     } catch (error) {

@@ -21,27 +21,17 @@ class ApiService {
       ...options,
     };
 
-    console.log(`Making API request to: ${endpoint}`);
-    console.log(`Auth token present: ${!!this.authToken}`);
-
     try {
       const response = await fetch(url, config);
-      console.log(`Response status: ${response.status}`);
 
       // If we get a 401 or 403, try to refresh the token and retry
       if (
         (response.status === 401 || response.status === 403) &&
         this.refreshTokenCallback
       ) {
-        console.log(
-          "Authentication error detected, attempting token refresh..."
-        );
         try {
-          console.log("Token expired, attempting refresh...");
           const newToken = await this.refreshTokenCallback();
           this.setAuthToken(newToken);
-          console.log("Token refreshed successfully, retrying request...");
-
           // Retry the request with the new token
           const retryConfig = {
             ...config,
@@ -51,9 +41,7 @@ class ApiService {
             },
           };
 
-          console.log("Retrying request with new token...");
           const retryResponse = await fetch(url, retryConfig);
-          console.log(`Retry response status: ${retryResponse.status}`);
 
           if (!retryResponse.ok) {
             throw new Error(`HTTP error! status: ${retryResponse.status}`);
