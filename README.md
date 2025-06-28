@@ -1,86 +1,123 @@
-# Todo Application
+# Todo Application with Notes & Calendar
 
-A full-stack Todo application with Vue 3 frontend and Node.js backend, featuring user authentication and task management.
+A modern full-stack Todo application with Vue 3 frontend and Firebase backend, featuring comprehensive task management, notes, calendar view, and real-time notifications.
 
 ## ✨ Features
 
-- 📝 Create, edit, and delete todos
-- ✅ Mark tasks as complete/incomplete
-- 🔐 User authentication (register/login)
-- 🎨 Modern Vue 3 + Vite frontend
-- 🚀 Express.js backend API
-- 🐳 Docker support
+### 📝 Task Management
+
+- Create, edit, and delete todos
+- Mark tasks as complete/incomplete
+- Organize tasks with tags
+- Set task priorities and due dates
+
+### 📖 Notes System
+
+- Create and manage personal notes
+- Link notes to specific tasks
+- Rich text content support
+- Real-time synchronization
+
+### 📅 Calendar Integration
+
+- Calendar view for task scheduling
+- Visual task organization by date
+- Interactive date-based task management
+
+### 🔔 Notifications & Reminders
+
+- Real-time notification system
+- Task reminder management
+- Automated notification delivery
+
+### 🔐 Authentication & Security
+
+- Firebase Authentication
+- Secure user registration and login
+- User-specific data isolation
+- Firestore security rules
+
+### 🎨 Modern UI/UX
+
+- Vue 3 with Composition API
+- Responsive design
+- Modern CSS styling
+- Intuitive user interface
 
 ## 🚀 Quick Start
 
-### Option 1: Docker (Recommended)
+### Prerequisites
 
-**Prerequisites:** Docker and Docker Compose installed
+- Node.js (v16+) and npm installed
+- Firebase project with Authentication and Firestore enabled
 
-1. **Clone the repository:**
+### 1. Firebase Setup
+
+1. **Create a Firebase project:**
+
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Create a new project
+   - Enable Authentication (Email/Password provider)
+   - Enable Firestore Database
+
+2. **Get Firebase configuration:**
+
+   - Go to Project Settings > General
+   - Add a web app to get your config object
+   - Copy the configuration values
+
+3. **Set up Firestore security rules:**
+   - Deploy the `firestore.rules` file to your Firebase project
+   - Or copy the rules from the file to your Firestore Rules tab
+
+### 2. Frontend Setup
+
+1. **Clone and navigate to frontend:**
 
    ```bash
    git clone <repository_url>
-   cd ToDoList-Solutions
+   cd ToDoList-Solutions/frontend
+   npm install
    ```
 
-2. **Run with Docker Compose:**
+2. **Configure Firebase:**
 
    ```bash
-   docker compose up --build
+   # Update src/firebase.js with your Firebase config
+   # Replace the firebaseConfig object with your values
    ```
 
-3. **Access the application:**
-   - Frontend: http://localhost
-   - Backend API: http://localhost:3000
+3. **Start development server:**
+   ```bash
+   npm run dev
+   ```
+   Frontend runs at: http://localhost:5173
 
-### Option 2: Local Development
+### 3. Backend Setup (Optional - for reminders)
 
-**Prerequisites:** Node.js (v16+) and npm installed
-
-#### Backend Setup
-
-1. **Navigate to backend and install dependencies:**
+1. **Navigate to backend:**
 
    ```bash
    cd backend
    npm install
    ```
 
-2. **Create environment file (optional but recommended):**
+2. **Configure Firebase Admin:**
 
    ```bash
-   # Create .env file in backend directory
-   echo "JWT_SECRET=your_secure_jwt_secret_here" > .env
-   echo "PORT=3000" >> .env
+   # Add your Firebase service account key
+   # Update firebase-admin.js with your configuration
    ```
 
-3. **Start the backend server:**
+3. **Start backend server:**
    ```bash
    npm start
-   # or for development
-   node server.js
    ```
    Backend runs at: http://localhost:3000
 
-#### Frontend Setup
+## 🐳 Docker Deployment
 
-1. **Open new terminal and navigate to frontend:**
-
-   ```bash
-   cd frontend
-   npm install
-   ```
-
-2. **Start the development server:**
-   ```bash
-   npm run dev
-   ```
-   Frontend runs at: http://localhost:5173
-
-## 🐳 Docker Instructions
-
-### Full Application (Backend + Frontend)
+### Full Application
 
 ```bash
 # Build and run both services
@@ -95,14 +132,6 @@ docker compose down
 
 ### Individual Services
 
-#### Backend Only
-
-```bash
-cd backend
-docker build -t todo-backend .
-docker run -p 3000:3000 todo-backend
-```
-
 #### Frontend Only
 
 ```bash
@@ -111,7 +140,166 @@ docker build -t todo-frontend .
 docker run -p 80:80 todo-frontend
 ```
 
+#### Backend Only
+
+```bash
+cd backend
+docker build -t todo-backend .
+docker run -p 3000:3000 todo-backend
+```
+
+## ☸️ Kubernetes Deployment
+
+Deploy to Kubernetes cluster:
+
+```bash
+# Apply deployments and services
+kubectl apply -f frontend-deployment.yaml
+kubectl apply -f frontend-service.yaml
+kubectl apply -f backend-deployment.yaml
+kubectl apply -f backend-service.yaml
+```
+
+## 🔧 Configuration
+
+### Firebase Configuration
+
+Update `frontend/src/firebase.js` with your Firebase project configuration:
+
+```javascript
+const firebaseConfig = {
+  apiKey: "your-api-key",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "your-app-id",
+};
+```
+
+### Firestore Security Rules
+
+The application uses comprehensive security rules (see `firestore.rules`):
+
+- Users can only access their own data
+- Authenticated users required for all operations
+- Role-based access for different collections
+
+### Environment Variables
+
+Backend environment variables:
+
+| Variable              | Description                         |
+| --------------------- | ----------------------------------- |
+| `PORT`                | Backend server port (default: 3000) |
+| `FIREBASE_PROJECT_ID` | Your Firebase project ID            |
+
+## 📁 Project Structure
+
+```
+ToDoList-Solutions/
+├── frontend/                    # Vue 3 frontend
+│   ├── src/
+│   │   ├── components/         # Vue components
+│   │   │   ├── AddTodoModal.vue
+│   │   │   ├── CalendarPage.vue
+│   │   │   ├── DashboardPage.vue
+│   │   │   ├── Notes.vue
+│   │   │   ├── NotificationCenter.vue
+│   │   │   ├── ReminderModal.vue
+│   │   │   ├── TagsManager.vue
+│   │   │   └── TodoItem.vue
+│   │   ├── composables/        # Vue composables
+│   │   │   ├── useAuth.js
+│   │   │   └── useNotifications.js
+│   │   ├── services/           # API services
+│   │   └── firebase.js         # Firebase configuration
+├── backend/                     # Node.js backend (optional)
+│   ├── routes/                 # API routes
+│   │   ├── auth.js
+│   │   └── reminders.js
+│   ├── middleware/             # Authentication middleware
+│   ├── tests/                  # Test files
+│   └── server.js               # Entry point
+├── Infra/                      # Terraform infrastructure
+│   ├── environments/dev/       # Development environment
+│   └── modules/                # Terraform modules
+├── firestore.rules             # Firestore security rules
+├── docker-compose.yml          # Multi-service setup
+├── *-deployment.yaml           # Kubernetes deployments
+└── *-service.yaml              # Kubernetes services
+```
+
+## 🏗️ Architecture & Design
+
+### Frontend
+
+- **Framework:** Vue 3 with Composition API
+- **Build Tool:** Vite for fast development
+- **Authentication:** Firebase Authentication
+- **Database:** Firestore for real-time data
+- **State Management:** Vue composables
+- **Styling:** Modern CSS with responsive design
+
+### Backend (Optional)
+
+- **Framework:** Express.js for reminder API
+- **Authentication:** Firebase Admin SDK
+- **Integration:** Firebase Firestore
+- **Purpose:** Advanced features like automated reminders
+
+### Security Features
+
+- Firebase Authentication with email/password
+- Firestore security rules for data protection
+- User-specific data isolation
+- Real-time permission validation
+
+### Real-time Features
+
+- Live task updates across devices
+- Real-time notifications
+- Instant data synchronization
+- Collaborative capabilities ready
+
+## 🔗 Main Features
+
+### Task Management
+
+- ✅ Create, edit, delete todos
+- 🏷️ Tag-based organization
+- 📅 Due date management
+- ⭐ Priority levels
+
+### Notes System
+
+- 📝 Rich text notes
+- 🔗 Task linking
+- 🔄 Real-time sync
+- 👤 User-specific content
+
+### Calendar View
+
+- 📅 Monthly/weekly views
+- 📍 Task positioning by date
+- 🎯 Visual task management
+- 📊 Progress tracking
+
+### Notifications
+
+- 🔔 Real-time alerts
+- ⏰ Reminder system
+- 📱 Cross-device sync
+- 🎛️ Customizable settings
+
 ## 🧪 Testing
+
+Run frontend tests:
+
+```bash
+cd frontend
+npm run test
+```
 
 Run backend tests:
 
@@ -120,83 +308,62 @@ cd backend
 npm test
 ```
 
-## 🔧 Configuration
+## 🚀 Deployment
 
-### Environment Variables
-
-The backend uses these optional environment variables:
-
-| Variable     | Default             | Description                                   |
-| ------------ | ------------------- | --------------------------------------------- |
-| `PORT`       | `3000`              | Backend server port                           |
-| `JWT_SECRET` | `"your-secret-key"` | JWT signing secret (⚠️ Change in production!) |
-
-### Security Note
-
-⚠️ **Important:** The default JWT secret is insecure. Always set a strong `JWT_SECRET` in production:
+### Firebase Hosting (Frontend)
 
 ```bash
-# Generate a secure secret
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+cd frontend
+npm run build
+firebase deploy
 ```
 
-## 📁 Project Structure
+### Cloud Run (Backend)
 
+```bash
+cd backend
+gcloud run deploy todo-backend --source .
 ```
-ToDoList-Solutions/
-├── backend/                 # Express.js API
-│   ├── routes/             # API routes
-│   ├── middleware/         # Auth middleware
-│   ├── tests/             # Test files
-│   └── server.js          # Entry point
-├── frontend/              # Vue 3 frontend
-│   ├── src/
-│   │   ├── components/    # Vue components
-│   │   └── composables/   # Vue composables
-│   └── public/
-├── docker-compose.yml     # Multi-service setup
-└── README.md
-```
-
-## 🏗️ Architecture & Design
-
-### Backend
-
-- **Framework:** Express.js for RESTful API
-- **Authentication:** JWT with bcrypt password hashing
-- **Data Storage:** JSON file (development) - easily replaceable with database
-- **Testing:** Jest + Supertest for API testing
-
-### Frontend
-
-- **Framework:** Vue 3 with Composition API
-- **Build Tool:** Vite for fast development
-- **Styling:** Modern CSS with responsive design
-- **State Management:** Vue composables for auth state
-
-### Security Features
-
-- Password hashing with bcrypt
-- JWT token-based authentication
-- Protected API routes with middleware
-- CORS configuration for cross-origin requests
-
-## 🔗 API Endpoints
-
-| Method | Endpoint         | Description       |
-| ------ | ---------------- | ----------------- |
-| `POST` | `/auth/register` | User registration |
-| `POST` | `/auth/login`    | User login        |
-| `GET`  | `/`              | Health check      |
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run tests
-5. Submit a pull request
+4. Run tests (`npm test`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
 ## 📄 License
 
 This project is open source and available under the [MIT License](LICENSE).
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+1. **Permission denied errors:**
+
+   - Ensure Firestore rules are properly deployed
+   - Verify user authentication status
+   - Check that `userId` is correctly set in document data
+
+2. **Firebase configuration errors:**
+
+   - Verify all Firebase config values are correct
+   - Ensure Firebase project has Authentication and Firestore enabled
+   - Check that the web app is properly configured in Firebase
+
+3. **Build/deployment issues:**
+   - Clear node_modules and reinstall dependencies
+   - Verify Node.js version compatibility (v16+)
+   - Check environment variables and configuration files
+
+### Support
+
+For additional support:
+
+- Check the [Issues](https://github.com/your-repo/issues) section
+- Review Firebase documentation
+- Consult Vue 3 documentation for frontend issues
