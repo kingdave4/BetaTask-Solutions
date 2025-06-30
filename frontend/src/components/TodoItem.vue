@@ -2,7 +2,10 @@
   <li class="todo-card" :class="{ completed: todo.isCompleted }">
     <div class="todo-details">
       <div class="todo-header">
-        <span class="todo-title">{{ todo.title }}</span>
+        <span class="todo-title">
+          <span v-if="todo.recurring && todo.recurring.interval" class="recurring-icon" title="Recurring Task">🔄</span>
+          {{ todo.title }}
+        </span>
         <span class="priority-badge" :class="getPriorityClass(todo.priority)">
           {{ getPriorityText(todo.priority) }}
         </span>
@@ -58,6 +61,12 @@
 
       <div class="todo-meta-info">
         <span v-if="todo.dueDate">Due: {{ formatDate(todo.dueDate) }}</span>
+        <span v-if="todo.recurring && todo.recurring.interval" class="recurring-indicator">
+          🔄 Repeats {{ formatRecurrence(todo.recurring) }}
+        </span>
+        <span v-if="todo.recurringParentId && !todo.isRecurringParent" class="recurring-instance">
+          📅 Instance {{ todo.recurringOccurrence || 1 }} of recurring task
+        </span>
         <span>Added: {{ formatDate(todo.createdAt) }}, {{ formatTime(todo.createdAt) }}</span>
       </div>
     </div>
@@ -220,6 +229,58 @@ const handleEdit = () => {
 const handleReminders = () => {
   emit("manage-reminders", props.todo);
 };
+
+const formatRecurrence = (recurring) => {
+  if (!recurring || !recurring.interval) {
+    return 'Never';
+  }
+
+  const daysOfWeekOptions = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const monthsOfYearOptions = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  let recurrenceString = '';
+  const { interval, customInterval, endCondition, endCount, endDate } = recurring;
+
+  switch (interval) {
+    case 'daily':
+      recurrenceString = 'daily';
+      break;
+    case 'weekly':
+      recurrenceString = 'weekly';
+      break;
+    case 'monthly':
+      recurrenceString = 'monthly';
+      break;
+    case 'yearly':
+      recurrenceString = 'yearly';
+      break;
+    case 'custom':
+      if (customInterval) {
+        recurrenceString = `every ${customInterval.value} ${customInterval.unit}(s)`;
+        if (customInterval.unit === 'week' && customInterval.daysOfWeek && customInterval.daysOfWeek.length > 0) {
+          const sortedDays = customInterval.daysOfWeek.map(dayIndex => daysOfWeekOptions[dayIndex]).sort();
+          recurrenceString += ` on ${sortedDays.join(', ')}`;
+        } else if (customInterval.unit === 'month' && customInterval.dayOfMonth !== undefined && customInterval.dayOfMonth !== null) {
+          recurrenceString += ` on day ${customInterval.dayOfMonth}`;
+        } else if (customInterval.unit === 'year' && customInterval.monthOfYear !== undefined && customInterval.monthOfYear !== null && customInterval.dayOfMonth !== undefined && customInterval.dayOfMonth !== null) {
+          recurrenceString += ` on ${monthsOfYearOptions[customInterval.monthOfYear - 1]} ${customInterval.dayOfMonth}`;
+        }
+      } else {
+        recurrenceString = 'custom (invalid)';
+      }
+      break;
+    default:
+      recurrenceString = 'unknown';
+  }
+
+  if (endCondition === 'count' && endCount !== undefined && endCount !== null) {
+    recurrenceString += `, ends after ${endCount} occurrences`;
+  } else if (endCondition === 'untilDate' && endDate) {
+    recurrenceString += `, ends on ${formatDate(endDate)}`;
+  }
+
+  return recurrenceString;
+};
 </script>
 
 
@@ -256,6 +317,15 @@ const handleReminders = () => {
   font-size: 1.3em;
   color: #f0f0f0;
   word-break: break-word;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recurring-icon {
+  color: #42b983;
+  font-size: 0.8em;
+  opacity: 0.8;
 }
 
 .priority-badge {
@@ -381,6 +451,26 @@ const handleReminders = () => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.recurring-indicator {
+  color: #42b983 !important;
+  font-weight: 500;
+  background-color: rgba(66, 185, 131, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  align-self: flex-start;
+}
+
+.recurring-instance {
+  color: #ffd93d !important;
+  font-weight: 500;
+  background-color: rgba(255, 217, 61, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  align-self: flex-start;
 }
 
 .todo-tags-section {

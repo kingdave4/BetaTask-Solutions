@@ -50,6 +50,121 @@
           </select>
         </div>
 
+        <!-- Recurring Task Section -->
+        <div class="recurring-section">
+          <h4>Recurring Task</h4>
+          <div class="form-group">
+            <label for="recurrence-interval">Repeat</label>
+            <select id="recurrence-interval" v-model="recurringData.interval" class="form-input">
+              <option :value="null">Does not repeat</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+
+          <div v-if="recurringData.interval === 'custom'" class="custom-recurrence-options">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="custom-interval-value">Repeat every</label>
+                <input
+                  type="number"
+                  id="custom-interval-value"
+                  v-model.number="recurringData.customInterval.value"
+                  class="form-input"
+                  min="1"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="custom-interval-unit">Unit</label>
+                <select id="custom-interval-unit" v-model="recurringData.customInterval.unit" class="form-input" required>
+                  <option value="day">Day(s)</option>
+                  <option value="week">Week(s)</option>
+                  <option value="month">Month(s)</option>
+                  <option value="year">Year(s)</option>
+                </select>
+              </div>
+            </div>
+
+            <div v-if="recurringData.customInterval.unit === 'week'" class="form-group">
+              <label>Repeat on</label>
+              <div class="days-of-week">
+                <label v-for="(day, index) in daysOfWeekOptions" :key="index">
+                  <input type="checkbox" :value="index" v-model="recurringData.customInterval.daysOfWeek">
+                  {{ day }}
+                </label>
+              </div>
+            </div>
+
+            <div v-if="recurringData.customInterval.unit === 'month'" class="form-group">
+              <label for="custom-month-day">Repeat on day of the month</label>
+              <input
+                type="number"
+                id="custom-month-day"
+                v-model.number="recurringData.customInterval.dayOfMonth"
+                class="form-input"
+                min="1"
+                max="31"
+              />
+            </div>
+
+            <div v-if="recurringData.customInterval.unit === 'year'" class="form-row">
+              <div class="form-group">
+                <label for="custom-year-month">Month</label>
+                <select id="custom-year-month" v-model.number="recurringData.customInterval.monthOfYear" class="form-input">
+                  <option v-for="(month, index) in monthsOfYearOptions" :key="index" :value="index + 1">{{ month }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="custom-year-day">Day</label>
+                <input
+                  type="number"
+                  id="custom-year-day"
+                  v-model.number="recurringData.customInterval.dayOfMonth"
+                  class="form-input"
+                  min="1"
+                  max="31"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div v-if="recurringData.interval !== null" class="form-group">
+            <label for="recurrence-end">Ends</label>
+            <select id="recurrence-end" v-model="recurringData.endCondition" class="form-input">
+              <option value="never">Never</option>
+              <option value="count">After a number of occurrences</option>
+              <option value="untilDate">On a specific date</option>
+            </select>
+          </div>
+
+          <div v-if="recurringData.endCondition === 'count'" class="form-group">
+            <label for="recurrence-end-count">Number of occurrences</label>
+            <input
+              type="number"
+              id="recurrence-end-count"
+              v-model.number="recurringData.endCount"
+              class="form-input"
+              min="1"
+              required
+            />
+          </div>
+
+          <div v-if="recurringData.endCondition === 'untilDate'" class="form-group">
+            <label for="recurrence-end-date">End date</label>
+            <input
+              type="date"
+              id="recurrence-end-date"
+              v-model="recurringData.endDate"
+              class="form-input"
+              required
+            />
+          </div>
+        </div>
+
         <!-- Category Selection -->
         <div class="form-group">
           <label for="modal-todo-category">Category</label>
@@ -163,7 +278,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["close-modal"]);
+const emit = defineEmits(["close-modal", "edit-todo", "add-todo"]);
 
 const { user, loading } = useAuth();
 
@@ -194,6 +309,24 @@ const predefinedCategories = ref([
 // Subtasks management
 const subtasks = ref([]);
 const autoCompleteOnAllSubtasks = ref(true);
+
+// Recurring task management
+const recurringData = ref({
+  interval: null,
+  customInterval: {
+    unit: 'day',
+    value: 1,
+    daysOfWeek: [],
+    dayOfMonth: null,
+    monthOfYear: null,
+  },
+  endCondition: 'never',
+  endCount: null,
+  endDate: null,
+});
+
+const daysOfWeekOptions = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const monthsOfYearOptions = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const addSubtask = () => {
   subtasks.value.push({
@@ -265,6 +398,29 @@ watch(
         selectedTags.value = props.todo.tags ? [...props.todo.tags] : [];
         subtasks.value = props.todo.subtasks ? [...props.todo.subtasks] : [];
         autoCompleteOnAllSubtasks.value = props.todo.autoCompleteOnAllSubtasks !== false;
+        
+        // Handle recurring data
+        if (props.todo.recurring) {
+          recurringData.value = { ...props.todo.recurring };
+          if (!recurringData.value.customInterval) {
+            recurringData.value.customInterval = {
+              unit: 'day',
+              value: 1,
+              daysOfWeek: [],
+              dayOfMonth: null,
+              monthOfYear: null,
+            };
+          } else {
+            recurringData.value.customInterval = { ...recurringData.value.customInterval };
+            if (recurringData.value.customInterval.daysOfWeek) {
+              recurringData.value.customInterval.daysOfWeek = [...recurringData.value.customInterval.daysOfWeek];
+            } else {
+              recurringData.value.customInterval.daysOfWeek = [];
+            }
+          }
+        } else {
+          resetRecurringData();
+        }
       } else {
         newTodoTitle.value = "";
         newTodoDescription.value = "";
@@ -274,12 +430,29 @@ watch(
         selectedTags.value = [];
         subtasks.value = [];
         autoCompleteOnAllSubtasks.value = true;
+        resetRecurringData();
       }
       titleError.value = "";
       tagToAdd.value = "";
     }
   }
 );
+
+const resetRecurringData = () => {
+  recurringData.value = {
+    interval: null,
+    customInterval: {
+      unit: 'day',
+      value: 1,
+      daysOfWeek: [],
+      dayOfMonth: null,
+      monthOfYear: null,
+    },
+    endCondition: 'never',
+    endCount: null,
+    endDate: null,
+  };
+};
 
 const handleSubmit = async () => {
   titleError.value = "";
@@ -302,22 +475,60 @@ const handleSubmit = async () => {
     userId: user.value?.userId,
     subtasks: validSubtasks,
     autoCompleteOnAllSubtasks: autoCompleteOnAllSubtasks.value,
+    recurring: recurringData.value.interval !== null ? recurringData.value : null,
+    isRecurringParent: recurringData.value.interval !== null,
+    recurringParentId: props.todo?.recurringParentId || null,
+    nextDueDate: recurringData.value.interval !== null ? calculateNextDueDate(newTodoDueDate.value, recurringData.value) : null,
   };
 
-  try {
-    if (props.todo) {
-      // Edit mode
-      const todoRef = doc(db, "todos", props.todo.id);
-      await updateDoc(todoRef, todoData);
-    } else {
-      const newTodoId = uuidv4();
-      const todoRef = doc(db, "todos", newTodoId);
-      await setDoc(todoRef, { ...todoData, id: newTodoId });
-    }
-    closeModal();
-  } catch (e) {
-    console.error("Error adding/updating document: ", e);
+  if (props.todo) {
+    emit("edit-todo", todoData);
+  } else {
+    emit("add-todo", todoData);
   }
+};
+
+const calculateNextDueDate = (currentDueDate, recurring) => {
+  if (!currentDueDate || !recurring.interval) return null;
+  
+  const baseDate = new Date(currentDueDate);
+  let nextDate = new Date(baseDate);
+  
+  switch (recurring.interval) {
+    case 'daily':
+      nextDate.setDate(nextDate.getDate() + 1);
+      break;
+    case 'weekly':
+      nextDate.setDate(nextDate.getDate() + 7);
+      break;
+    case 'monthly':
+      nextDate.setMonth(nextDate.getMonth() + 1);
+      break;
+    case 'yearly':
+      nextDate.setFullYear(nextDate.getFullYear() + 1);
+      break;
+    case 'custom':
+      if (recurring.customInterval) {
+        const { unit, value } = recurring.customInterval;
+        switch (unit) {
+          case 'day':
+            nextDate.setDate(nextDate.getDate() + value);
+            break;
+          case 'week':
+            nextDate.setDate(nextDate.getDate() + (value * 7));
+            break;
+          case 'month':
+            nextDate.setMonth(nextDate.getMonth() + value);
+            break;
+          case 'year':
+            nextDate.setFullYear(nextDate.getFullYear() + value);
+            break;
+        }
+      }
+      break;
+  }
+  
+  return nextDate.toISOString().split('T')[0];
 };
 
 const closeModal = () => {
@@ -648,5 +859,80 @@ onMounted(() => {
 .create-button:hover {
   background-color: #369870;
   border-color: #369870;
+}
+
+.tag-remove {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1.2em;
+  padding: 0 4px;
+}
+
+.tag-remove:hover {
+  color: #ff6b6b;
+}
+
+/* Recurring Task Styles */
+.recurring-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #444;
+}
+
+.recurring-section h4 {
+  color: #f0f0f0;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recurring-section h4:before {
+  content: "🔄";
+  font-size: 1.1em;
+}
+
+.custom-recurrence-options {
+  background-color: #2a2a2a;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  border: 1px solid #3a3a3a;
+}
+
+.days-of-week {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.days-of-week label {
+  background-color: #3a3a3a;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.9em;
+  color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.days-of-week label:hover {
+  background-color: #4a4a4a;
+}
+
+.days-of-week input[type="checkbox"] {
+  margin-right: 5px;
+  accent-color: #42b983;
+}
+
+.days-of-week input[type="checkbox"]:checked + span {
+  font-weight: bold;
+  color: #42b983;
 }
 </style>

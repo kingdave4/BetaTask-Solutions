@@ -113,7 +113,7 @@
       :show-modal="showModal"
       :todo="currentTodo"
       @close-modal="() => { showModal = false; currentTodo = null; }"
-      @add-todo="addTodo"
+      @add-todo="handleAddTodo"
       @edit-todo="handleEditTodo"
     />
     <ReminderModal
@@ -205,7 +205,7 @@ async function fetchTodos() {
   }
 }
 
-async function addTodo(payload) {
+async function handleAddTodo(payload) {
   if (!isAuthenticated.value) {
     showLoginModal.value = true;
     return;
@@ -221,10 +221,32 @@ async function addTodo(payload) {
     };
 
     await addDoc(collection(db, "todos"), todoData);
+    
+    // If this is a recurring task, set up the recurring schedule via API
+    if (todoData.recurring && todoData.recurring.interval) {
+      await createRecurringTaskSchedule(todoData);
+    }
+    
     showModal.value = false;
+    currentTodo.value = null;
   } catch (err) {
     console.error("Error adding todo:", err);
     error.value = "Failed to add todo. Please try again.";
+  }
+}
+
+async function createRecurringTaskSchedule(todoData) {
+  try {
+    // Call backend API to set up recurring task schedule
+    if (user.value?.token) {
+      apiService.setAuthToken(user.value.token);
+      await apiService.createRecurringTask({
+        todoData,
+        userId: user.value.userId
+      });
+    }
+  } catch (err) {
+    console.error("Error creating recurring task schedule:", err);
   }
 }
 
@@ -276,12 +298,53 @@ async function handleEditTodo(payload) {
   try {
     const todoRef = doc(db, "todos", currentTodo.value.id);
     await updateDoc(todoRef, payload);
+    
+    // If recurring status changed, update the recurring schedule
+    const wasRecurring = currentTodo.value.recurring && currentTodo.value.recurring.interval;
+    const isNowRecurring = payload.recurring && payload.recurring.interval;
+    
+    if (!wasRecurring && isNowRecurring) {
+      // Task is now recurring - create schedule
+      await createRecurringTaskSchedule({...currentTodo.value, ...payload});
+    } else if (wasRecurring && !isNowRecurring) {
+      // Task is no longer recurring - remove schedule
+      await removeRecurringTaskSchedule(currentTodo.value.id);
+    } else if (wasRecurring && isNowRecurring) {
+      // Recurring settings changed - update schedule
+      await updateRecurringTaskSchedule(currentTodo.value.id, {...currentTodo.value, ...payload});
+    }
+    
     showModal.value = false;
     currentTodo.value = null;
   } catch (err) {
     console.error("Error editing todo:", err);
     error.value = "Failed to edit task.";
   }  
+}
+
+async function removeRecurringTaskSchedule(todoId) {
+  try {
+    if (user.value?.token) {
+      apiService.setAuthToken(user.value.token);
+      await apiService.removeRecurringTask(todoId);
+    }
+  } catch (err) {
+    console.error("Error removing recurring task schedule:", err);
+  }
+}
+
+async function updateRecurringTaskSchedule(todoId, todoData) {
+  try {
+    if (user.value?.token) {
+      apiService.setAuthToken(user.value.token);
+      await apiService.updateRecurringTask(todoId, {
+        todoData,
+        userId: user.value.userId
+      });
+    }
+  } catch (err) {
+    console.error("Error updating recurring task schedule:", err);
+  }
 }
 
 // Auth functions

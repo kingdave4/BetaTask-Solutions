@@ -17,12 +17,11 @@
           </p>
         </div>
 
-        <!-- Error Message -->
         <div v-if="errorMessage" class="error-message">
           {{ errorMessage }}
         </div>
 
-        <!-- Existing Reminders -->
+
         <div v-if="reminders.length > 0" class="existing-reminders">
           <h4>Current Reminders</h4>
           <div class="reminders-list">
@@ -36,13 +35,16 @@
                 <div class="reminder-datetime">
                   <span class="reminder-date">{{ formatDate(reminder.reminderDateTime) }}</span>
                   <span class="reminder-time">{{ formatTime(reminder.reminderDateTime) }}</span>
-                </div>
-                <div class="reminder-message">{{ reminder.message }}</div>
-                <div class="reminder-status">
-                  <span v-if="reminder.isTriggered" class="status-triggered">✓ Triggered</span>
-                  <span v-else class="status-pending">⏳ Pending</span>
-                </div>
-              </div>
+                 </div>
+                 <div v-if="reminder.recurrence" class="reminder-recurrence">
+                    Repeats: {{ formatRecurrence(reminder.recurrence) }}
+                 </div>
+                 <div class="reminder-message">{{ reminder.message }}</div>
+                 <div class="reminder-status">
+                   <span v-if="reminder.isTriggered" class="status-triggered">✓ Triggered</span>
+                   <span v-else class="status-pending">⏳ Pending</span>
+                 </div>
+               </div>
               <div class="reminder-actions">
                 <button 
                   @click="editReminder(reminder)" 
@@ -63,7 +65,7 @@
           </div>
         </div>
 
-        <!-- Add New Reminder Form -->
+
         <div class="add-reminder-section">
           <h4>{{ editingReminder ? 'Edit Reminder' : 'Add New Reminder' }}</h4>
           <form @submit.prevent="submitReminder" class="reminder-form">
@@ -100,6 +102,128 @@
                 rows="2"
               ></textarea>
             </div>
+
+
+            <div class="recurrence-section">
+              <h5>Recurrence</h5>
+              <div class="form-group">
+                <label for="recurrence-interval">Repeat</label>
+                <select id="recurrence-interval" v-model="newReminderRecurrence.interval" class="form-input">
+                  <option :value="null">Does not repeat</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+
+
+              <div v-if="newReminderRecurrence.interval === 'custom'" class="custom-recurrence-options">
+                 <div class="form-row">
+                    <div class="form-group">
+                        <label for="custom-interval-value">Repeat every</label>
+                        <input
+                            type="number"
+                            id="custom-interval-value"
+                            v-model.number="newReminderRecurrence.customInterval.value"
+                            class="form-input"
+                            min="1"
+                            required
+                        />
+                    </div>
+                     <div class="form-group">
+                        <label for="custom-interval-unit">Unit</label>
+                        <select id="custom-interval-unit" v-model="newReminderRecurrence.customInterval.unit" class="form-input" required>
+                            <option value="day">Day(s)</option>
+                            <option value="week">Week(s)</option>
+                            <option value="month">Month(s)</option>
+                            <option value="year">Year(s)</option>
+                        </select>
+                    </div>
+                 </div>
+
+
+                 <div v-if="newReminderRecurrence.customInterval.unit === 'week'" class="form-group">
+                     <label>Repeat on</label>
+                     <div class="days-of-week">
+                         <label v-for="(day, index) in daysOfWeekOptions" :key="index">
+                             <input type="checkbox" :value="index" v-model="newReminderRecurrence.customInterval.daysOfWeek">
+                             {{ day }}
+                         </label>
+                     </div>
+                 </div>
+
+
+                 <div v-if="newReminderRecurrence.customInterval.unit === 'month'" class="form-group">
+                     <label for="custom-month-day">Repeat on day of the month</label>
+                      <input
+                            type="number"
+                            id="custom-month-day"
+                            v-model.number="newReminderRecurrence.customInterval.dayOfMonth"
+                            class="form-input"
+                            min="1"
+                            max="31"
+                        />
+                 </div>
+
+
+                 <div v-if="newReminderRecurrence.customInterval.unit === 'year'" class="form-row">
+                     <div class="form-group">
+                        <label for="custom-year-month">Month</label>
+                         <select id="custom-year-month" v-model.number="newReminderRecurrence.customInterval.monthOfYear" class="form-input">
+                             <option v-for="(month, index) in monthsOfYearOptions" :key="index" :value="index + 1">{{ month }}</option>
+                         </select>
+                     </div>
+                      <div class="form-group">
+                        <label for="custom-year-day">Day</label>
+                         <input
+                            type="number"
+                            id="custom-year-day"
+                            v-model.number="newReminderRecurrence.customInterval.dayOfMonth"
+                            class="form-input"
+                            min="1"
+                            max="31"
+                        />
+                     </div>
+                 </div>
+              </div>
+
+
+              <div v-if="newReminderRecurrence.interval !== null" class="form-group">
+                <label for="recurrence-end">Ends</label>
+                <select id="recurrence-end" v-model="newReminderRecurrence.endCondition" class="form-input">
+                  <option value="never">Never</option>
+                  <option value="count">After a number of occurrences</option>
+                  <option value="untilDate">On a specific date</option>
+                </select>
+              </div>
+
+
+              <div v-if="newReminderRecurrence.endCondition === 'count'" class="form-group">
+                <label for="recurrence-end-count">Number of occurrences</label>
+                <input
+                  type="number"
+                  id="recurrence-end-count"
+                  v-model.number="newReminderRecurrence.endCount"
+                  class="form-input"
+                  min="1"
+                  required
+                />
+              </div>
+
+              <div v-if="newReminderRecurrence.endCondition === 'untilDate'" class="form-group">
+                <label for="recurrence-end-date">End date</label>
+                <input
+                  type="date"
+                  id="recurrence-end-date"
+                  v-model="newReminderRecurrence.endDate"
+                  class="form-input"
+                  required
+                />
+              </div>
+            </div>
+
 
             <div class="quick-reminders">
               <h5>Quick Reminders</h5>
@@ -189,6 +313,23 @@ const newReminderDate = ref('')
 const newReminderTime = ref('')
 const newReminderMessage = ref('')
 
+const newReminderRecurrence = ref({
+  interval: null,
+  customInterval: {
+    unit: 'day',
+    value: 1,
+    daysOfWeek: [],
+    dayOfMonth: null,
+    monthOfYear: null,
+  },
+  endCondition: 'never',
+  endCount: null,
+  endDate: null,
+})
+
+const daysOfWeekOptions = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const monthsOfYearOptions = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
 watch(() => props.showModal, (newValue) => {
   if (newValue && props.todo) {
     fetchReminders()
@@ -207,6 +348,19 @@ const resetForm = () => {
   newReminderMessage.value = ''
   editingReminder.value = null
   errorMessage.value = ''
+  newReminderRecurrence.value = {
+    interval: null,
+    customInterval: {
+      unit: 'day',
+      value: 1,
+      daysOfWeek: [],
+      dayOfMonth: null,
+      monthOfYear: null,
+    },
+    endCondition: 'never',
+    endCount: null,
+    endDate: null,
+  }
 }
 
 const fetchReminders = async () => {
@@ -264,7 +418,8 @@ const submitReminder = async () => {
       const createPayload = {
         todoId: props.todo.id,
         reminderDateTime,
-        message: newReminderMessage.value || `Reminder for: ${props.todo.title}`
+        message: newReminderMessage.value || `Reminder for: ${props.todo.title}`,
+        recurrence: newReminderRecurrence.value.interval !== null ? newReminderRecurrence.value : null,
       }
       await apiService.createReminder(createPayload)
     }
@@ -286,6 +441,34 @@ const editReminder = (reminder) => {
   newReminderDate.value = datetime.toISOString().split('T')[0]
   newReminderTime.value = datetime.toTimeString().slice(0, 5)
   newReminderMessage.value = reminder.message
+  // Populate recurrence fields if they exist
+  if (reminder.recurrence) {
+      newReminderRecurrence.value = { ...reminder.recurrence };
+      // Ensure customInterval and its properties are initialized if recurrence exists but customInterval is missing
+      if (!newReminderRecurrence.value.customInterval) {
+          newReminderRecurrence.value.customInterval = {
+              unit: 'day',
+              value: 1,
+              daysOfWeek: [],
+              dayOfMonth: null,
+              monthOfYear: null,
+          };
+      } else {
+           // Ensure nested properties are reactive
+           newReminderRecurrence.value.customInterval = { ...newReminderRecurrence.value.customInterval };
+           if (newReminderRecurrence.value.customInterval.daysOfWeek) {
+               newReminderRecurrence.value.customInterval.daysOfWeek = [...newReminderRecurrence.value.customInterval.daysOfWeek];
+           } else {
+                newReminderRecurrence.value.customInterval.daysOfWeek = [];
+           }
+      }
+       // Ensure endCount and endDate are reactive
+       newReminderRecurrence.value.endCount = reminder.recurrence.endCount !== undefined ? reminder.recurrence.endCount : null;
+       newReminderRecurrence.value.endDate = reminder.recurrence.endDate !== undefined ? reminder.recurrence.endDate : null;
+
+  } else {
+      resetForm();
+  }
 }
 
 const cancelEdit = () => {
@@ -349,6 +532,55 @@ const setQuickReminder = (type) => {
   newReminderDate.value = reminderDate.toISOString().split('T')[0]
   newReminderTime.value = reminderDate.toTimeString().slice(0, 5)
   newReminderMessage.value = `${type.replace(/(\d+)/, '$1 ')} reminder for: ${props.todo.title}`
+}
+
+const formatRecurrence = (recurrence) => {
+    if (!recurrence || !recurrence.interval) {
+        return 'Never';
+    }
+
+    let recurrenceString = '';
+    const { interval, customInterval, endCondition, endCount, endDate } = recurrence;
+
+    switch (interval) {
+        case 'daily':
+            recurrenceString = 'Daily';
+            break;
+        case 'weekly':
+            recurrenceString = 'Weekly';
+            break;
+        case 'monthly':
+            recurrenceString = 'Monthly';
+            break;
+        case 'yearly':
+            recurrenceString = 'Yearly';
+            break;
+        case 'custom':
+            if (customInterval) {
+                recurrenceString = `Every ${customInterval.value} ${customInterval.unit}(s)`;
+                if (customInterval.unit === 'week' && customInterval.daysOfWeek && customInterval.daysOfWeek.length > 0) {
+                    const sortedDays = customInterval.daysOfWeek.map(dayIndex => daysOfWeekOptions[dayIndex]).sort();
+                    recurrenceString += ` on ${sortedDays.join(', ')}`;
+                } else if (customInterval.unit === 'month' && customInterval.dayOfMonth !== undefined && customInterval.dayOfMonth !== null) {
+                     recurrenceString += ` on day ${customInterval.dayOfMonth}`;
+                } else if (customInterval.unit === 'year' && customInterval.monthOfYear !== undefined && customInterval.monthOfYear !== null && customInterval.dayOfMonth !== undefined && customInterval.dayOfMonth !== null) {
+                     recurrenceString += ` on ${monthsOfYearOptions[customInterval.monthOfYear - 1]} ${customInterval.dayOfMonth}`;
+                }
+            } else {
+                recurrenceString = 'Custom (invalid)';
+            }
+            break;
+        default:
+            recurrenceString = 'Unknown';
+    }
+
+    if (endCondition === 'count' && endCount !== undefined && endCount !== null) {
+        recurrenceString += `, ends after ${endCount} occurrences`;
+    } else if (endCondition === 'untilDate' && endDate) {
+        recurrenceString += `, ends on ${formatDate(endDate)}`;
+    }
+
+    return recurrenceString;
 }
 
 const formatDate = (dateString) => {
@@ -517,6 +749,12 @@ const formatTime = (dateString) => {
   margin-bottom: 5px;
 }
 
+.reminder-recurrence {
+  font-size: 0.85em;
+  color: #bbb;
+  margin-top: 5px;
+}
+
 .reminder-status {
   font-size: 0.8em;
 }
@@ -607,6 +845,59 @@ const formatTime = (dateString) => {
 .form-input:focus {
   outline: none;
   border-color: #42b983;
+}
+
+.recurrence-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #444;
+}
+
+.recurrence-section h5 {
+  color: #f0f0f0;
+  margin-bottom: 15px;
+}
+
+.custom-recurrence-options {
+  background-color: #2a2a2a;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  border: 1px solid #3a3a3a;
+}
+
+.days-of-week {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.days-of-week label {
+  background-color: #3a3a3a;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.9em;
+  color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.days-of-week label:hover {
+  background-color: #4a4a4a;
+}
+
+.days-of-week input[type="checkbox"] {
+  margin-right: 5px;
+  accent-color: #42b983;
+}
+
+.days-of-week input[type="checkbox"]:checked + span {
+  font-weight: bold;
+  color: #42b983;
 }
 
 .quick-reminders {
