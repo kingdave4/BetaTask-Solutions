@@ -148,6 +148,36 @@ class ApiService {
       headers: this.getAuthHeaders(),
     });
   }
+
+  // Recurring Tasks API methods
+  async createRecurringTask(recurringTaskData) {
+    return this.request(`/recurring-tasks`, {
+      method: "POST",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(recurringTaskData),
+    });
+  }
+
+  async updateRecurringTask(todoId, recurringTaskData) {
+    return this.request(`/recurring-tasks/${todoId}`, {
+      method: "PUT",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(recurringTaskData),
+    });
+  }
+
+  async removeRecurringTask(todoId) {
+    return this.request(`/recurring-tasks/${todoId}`, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+    });
+  }
 }
 
 export default new ApiService();
