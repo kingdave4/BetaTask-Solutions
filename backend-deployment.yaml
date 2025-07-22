@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: todo-backend
-          image: todocrdev123.azurecr.io/todolist-backend:d1d03de5396daf02136f45ec9bf156463ac6c9df
+          image: todocrdev123.azurecr.io/todolist-backend:1e909191f1a2b9a03f20d9fc42647eb00430c601
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
