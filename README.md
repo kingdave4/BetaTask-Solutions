@@ -1,4 +1,4 @@
-# BetaTask-Solutions
+## BetaTask-Solutions
 
 > Full‑stack Todo application with Vue.js + Vite, Node.js + Express + PostgreSQL, and Terraform‑provisioned AKS/ACR on Azure.
 
@@ -10,7 +10,7 @@
 
 ---
 
-## 🛠 Tech Stack
+### 🛠 Tech Stack
 
 * **Infrastructure as Code:** Terraform (modular)
 * **Container Registry:** Azure Container Registry (ACR)
@@ -23,7 +23,7 @@
 
 ---
 
-## 🚀 Quick Start
+### 🚀 Quick Start
 
 1. **Clone the repo**
 
@@ -60,7 +60,7 @@
 4. Prometheus & Grafana monitor cluster and application metrics.
    
 
-## 📁 Project Structure
+### 📁 Project Structure
 
 ```
 BetaTask-Solutions/
@@ -102,7 +102,7 @@ BetaTask-Solutions/
 
 ---
 
-## 🎯 Key Outcomes
+### 🎯 Key Outcomes
 
 * **Zero‑downtime rolling updates** during deployments
 * **Seamless scaling** to handle unpredictable load
@@ -110,12 +110,12 @@ BetaTask-Solutions/
 
 ---
 
-## 📝 Contributing
+### 📝 Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
 
 ---
 
-## ⚖️ License
+### ⚖️ License
 
 MIT © David Mboli-Idie
