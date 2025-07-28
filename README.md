@@ -4,7 +4,7 @@
 
 ---
 
-## 🔗 Links
+### 🔗 Links
 
 * **Deep Dive Blog Post:** [Building BetaTask‑Solutions: Why We Chose Kubernetes on Azure](https://www.davidmboli-idie.com/blog/betatask-solution/)
 
