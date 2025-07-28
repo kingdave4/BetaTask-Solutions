@@ -27,9 +27,11 @@ module "aks" {
   tags                = var.tags
 }
 
-resource "azurerm_role_assignment" "example" {
+resource "azurerm_role_assignment" "role_assignment_acr" {
   principal_id                     = module.aks.principal_id
   role_definition_name             = "AcrPull"
   scope                            = module.acr.acr_resource_id
   skip_service_principal_aad_check = true
 }
+
+
