@@ -2,12 +2,10 @@
 
 > Full‑stack Todo application with Vue.js + Vite, Node.js + Express + PostgreSQL, and Terraform‑provisioned AKS/ACR on Azure.
 
----
 
 ## 🔗 Links
 
 * **Deep Dive Blog Post:** [Building BetaTask‑Solutions: Why We Chose Kubernetes on Azure](https://www.davidmboli-idie.com/blog/betatask-solution/)
-* **GitHub Repo:** [https://github.com/kingdave4/BetaTask-Solutions](https://github.com/kingdave4/BetaTask-Solutions)
 
 ---
 
