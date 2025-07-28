@@ -1,9 +1,5 @@
 # BetaTask-Solutions
 
-[![CI Build](https://github.com/kingdave4/BetaTask-Solutions/actions/workflows/build-and-push.yml/badge.svg)](https://github.com/kingdave4/BetaTask-Solutions/actions)
-[![Terraform fmt](https://github.com/kingdave4/BetaTask-Solutions/actions/workflows/terraform-lint.yml/badge.svg)](https://github.com/kingdave4/BetaTask-Solutions/actions)
-[![Docker Image](https://img.shields.io/badge/ACR%20Image-Ready-brightgreen)](https://portal.azure.com/#blade/Microsoft_Azure_ContainerRegistry/AdminMenuBlade/Repositories)
-
 > Full‑stack Todo application with Vue.js + Vite, Node.js + Express + PostgreSQL, and Terraform‑provisioned AKS/ACR on Azure.
 
 ---
@@ -63,8 +59,7 @@
 2. GitHub Actions builds Docker images and pushes to ACR.
 3. A deployment workflow applies Kubernetes manifests to AKS.
 4. Prometheus & Grafana monitor cluster and application metrics.
-
----
+   
 
 ## 📁 Project Structure
 
