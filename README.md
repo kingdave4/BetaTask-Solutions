@@ -1,369 +1,127 @@
-# BetaTask with Notes & Calendar
+# BetaTask-Solutions
 
-A modern full-stack Todo application with Vue 3 frontend and Firebase backend, featuring comprehensive task management, notes, calendar view, and real-time notifications.
+[![CI Build](https://github.com/kingdave4/BetaTask-Solutions/actions/workflows/build-and-push.yml/badge.svg)](https://github.com/kingdave4/BetaTask-Solutions/actions)
+[![Terraform fmt](https://github.com/kingdave4/BetaTask-Solutions/actions/workflows/terraform-lint.yml/badge.svg)](https://github.com/kingdave4/BetaTask-Solutions/actions)
+[![Docker Image](https://img.shields.io/badge/ACR%20Image-Ready-brightgreen)](https://portal.azure.com/#blade/Microsoft_Azure_ContainerRegistry/AdminMenuBlade/Repositories)
 
-## ✨ Features
+> Full‑stack Todo application with Vue.js + Vite, Node.js + Express + PostgreSQL, and Terraform‑provisioned AKS/ACR on Azure.
 
-### 📝 Task Management
+---
 
-- Create, edit, and delete todos
-- Mark tasks as complete/incomplete
-- Organize tasks with tags
-- Set task priorities and due dates
+## 🔗 Links
 
-### 📖 Notes System
+* **Deep Dive Blog Post:** [Building BetaTask‑Solutions: Why We Chose Kubernetes on Azure](https://www.davidmboli-idie.com/blog/betatask-solution/)
+* **GitHub Repo:** [https://github.com/kingdave4/BetaTask-Solutions](https://github.com/kingdave4/BetaTask-Solutions)
 
-- Create and manage personal notes
-- Link notes to specific tasks
-- Rich text content support
-- Real-time synchronization
+---
 
-### 📅 Calendar Integration
+## 🛠 Tech Stack
 
-- Calendar view for task scheduling
-- Visual task organization by date
-- Interactive date-based task management
+* **Infrastructure as Code:** Terraform (modular)
+* **Container Registry:** Azure Container Registry (ACR)
+* **Container Orchestration:** Azure Kubernetes Service (AKS)
+* **CI/CD:** GitHub Actions (build-and-push & deploy-to-aks)
+* **Monitoring:** Prometheus & Grafana
+* **Backend:** Node.js, Express.js, PostgreSQL
+* **Frontend:** Vue.js, Vite
+* **Containerization:** Docker
 
-### 🔔 Notifications & Reminders
-
-- Real-time notification system
-- Task reminder management
-- Automated notification delivery
-
-### 🔐 Authentication & Security
-
-- Firebase Authentication
-- Secure user registration and login
-- User-specific data isolation
-- Firestore security rules
-
-### 🎨 Modern UI/UX
-
-- Vue 3 with Composition API
-- Responsive design
-- Modern CSS styling
-- Intuitive user interface
+---
 
 ## 🚀 Quick Start
 
-### Prerequisites
-
-- Node.js (v16+) and npm installed
-- Firebase project with Authentication and Firestore enabled
-
-### 1. Firebase Setup
-
-1. **Create a Firebase project:**
-
-   - Go to [Firebase Console](https://console.firebase.google.com/)
-   - Create a new project
-   - Enable Authentication (Email/Password provider)
-   - Enable Firestore Database
-
-2. **Get Firebase configuration:**
-
-   - Go to Project Settings > General
-   - Add a web app to get your config object
-   - Copy the configuration values
-
-3. **Set up Firestore security rules:**
-   - Deploy the `firestore.rules` file to your Firebase project
-   - Or copy the rules from the file to your Firestore Rules tab
-
-### 2. Frontend Setup
-
-1. **Clone and navigate to frontend:**
+1. **Clone the repo**
 
    ```bash
-   git clone <repository_url>
-   cd ToDoList-Solutions/frontend
-   npm install
+   git clone https://github.com/kingdave4/BetaTask-Solutions.git
+   cd BetaTask-Solutions/Infra/environments/dev
    ```
 
-2. **Configure Firebase:**
+2. **Provision Infrastructure**
 
    ```bash
-   # Update src/firebase.js with your Firebase config
-   # Replace the firebaseConfig object with your values
+   terraform init
+   terraform plan -var-file="secrets.tfvars"
+   terraform apply -var-file="secrets.tfvars" -auto-approve
    ```
 
-3. **Start development server:**
-   ```bash
-   npm run dev
-   ```
-   Frontend runs at: http://localhost:5173
+   *Pro Tip*: Store state in Azure Blob Storage with soft-delete enabled.
 
-### 3. Backend Setup (Optional - for reminders)
+3. **Configure GitHub Secrets** (in repo Settings > Secrets)
 
-1. **Navigate to backend:**
+   * `AZURE_CREDENTIALS` (Service Principal JSON)
+   * `ACR_LOGIN_SERVER`, `ACR_USERNAME`, `ACR_PASSWORD`
 
-   ```bash
-   cd backend
-   npm install
-   ```
+4. **Run CI/CD**
 
-2. **Configure Firebase Admin:**
+   * Push to `main` branch to trigger **Build & Push Images** workflow.
+   * On success, **Deploy to AKS** workflow runs automatically.
 
-   ```bash
-   # Add your Firebase service account key
-   # Update firebase-admin.js with your configuration
-   ```
+---
 
-3. **Start backend server:**
-   ```bash
-   npm start
-   ```
-   Backend runs at: http://localhost:3000
+1. Terraform modules create Resource Group, ACR, and AKS.
+2. GitHub Actions builds Docker images and pushes to ACR.
+3. A deployment workflow applies Kubernetes manifests to AKS.
+4. Prometheus & Grafana monitor cluster and application metrics.
 
-## 🐳 Docker Deployment
-
-### Full Application
-
-```bash
-# Build and run both services
-docker compose up --build
-
-# Run in background
-docker compose up -d --build
-
-# Stop services
-docker compose down
-```
-
-### Individual Services
-
-#### Frontend Only
-
-```bash
-cd frontend
-docker build -t todo-frontend .
-docker run -p 80:80 todo-frontend
-```
-
-#### Backend Only
-
-```bash
-cd backend
-docker build -t todo-backend .
-docker run -p 3000:3000 todo-backend
-```
-
-## ☸️ Kubernetes Deployment
-
-Deploy to Kubernetes cluster:
-
-```bash
-# Apply deployments and services
-kubectl apply -f frontend-deployment.yaml
-kubectl apply -f frontend-service.yaml
-kubectl apply -f backend-deployment.yaml
-kubectl apply -f backend-service.yaml
-```
-
-## 🔧 Configuration
-
-### Firebase Configuration
-
-Update `frontend/src/firebase.js` with your Firebase project configuration:
-
-```javascript
-const firebaseConfig = {
-  apiKey: "your-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "your-app-id",
-};
-```
-
-### Firestore Security Rules
-
-The application uses comprehensive security rules (see `firestore.rules`):
-
-- Users can only access their own data
-- Authenticated users required for all operations
-- Role-based access for different collections
-
-### Environment Variables
-
-Backend environment variables:
-
-| Variable              | Description                         |
-| --------------------- | ----------------------------------- |
-| `PORT`                | Backend server port (default: 3000) |
-| `FIREBASE_PROJECT_ID` | Your Firebase project ID            |
+---
 
 ## 📁 Project Structure
 
 ```
-ToDoList-Solutions/
-├── frontend/                    # Vue 3 frontend
+BetaTask-Solutions/
+├── backend/                  # Node.js + Express API
+│   ├── routes/               # API endpoints
+│   ├── models/               # PostgreSQL data models
+│   ├── migrations/           # Database migrations
+│   └── server.js             # Entry point
+│
+├── frontend/                 # Vue.js + Vite frontend
 │   ├── src/
-│   │   ├── components/         # Vue components
-│   │   │   ├── AddTodoModal.vue
-│   │   │   ├── CalendarPage.vue
-│   │   │   ├── DashboardPage.vue
-│   │   │   ├── Notes.vue
-│   │   │   ├── NotificationCenter.vue
-│   │   │   ├── ReminderModal.vue
-│   │   │   ├── TagsManager.vue
-│   │   │   └── TodoItem.vue
-│   │   ├── composables/        # Vue composables
-│   │   │   ├── useAuth.js
-│   │   │   └── useNotifications.js
-│   │   ├── services/           # API services
-│   │   └── firebase.js         # Firebase configuration
-├── backend/                     # Node.js backend (optional)
-│   ├── routes/                 # API routes
-│   │   ├── auth.js
-│   │   └── reminders.js
-│   ├── middleware/             # Authentication middleware
-│   ├── tests/                  # Test files
-│   └── server.js               # Entry point
-├── Infra/                      # Terraform infrastructure
-│   ├── environments/dev/       # Development environment
-│   └── modules/                # Terraform modules
-├── firestore.rules             # Firestore security rules
-├── docker-compose.yml          # Multi-service setup
-├── *-deployment.yaml           # Kubernetes deployments
-└── *-service.yaml              # Kubernetes services
+│   │   ├── components/       # Vue components
+│   │   ├── composables/       # Vue composables
+│   │   └── services/         # API service calls
+│   └── vite.config.js        # Build configuration
+│
+├── Infra/                    # Terraform IaC
+│   ├── environments/
+│   │   └── dev/              # Dev environment configs
+│   └── modules/              # Reusable Terraform modules
+│       ├── resource-group/
+│       ├── container-registry/
+│       └── aks/
+│
+├── .github/                  # GitHub Actions workflows
+│   └── workflows/
+│       ├── build-and-push.yml
+│       └── deploy-to-aks.yml
+│
+├── k8s/                      # Kubernetes manifests
+│   ├── backend-deployment.yaml
+│   ├── backend-service.yaml
+│   ├── frontend-deployment.yaml
+│   └── frontend-service.yaml
+│
+└── docs/                     # Documentation and diagrams
+    └── architecture-diagram.png
 ```
 
-## 🏗️ Architecture & Design
+---
 
-### Frontend
+## 🎯 Key Outcomes
 
-- **Framework:** Vue 3 with Composition API
-- **Build Tool:** Vite for fast development
-- **Authentication:** Firebase Authentication
-- **Database:** Firestore for real-time data
-- **State Management:** Vue composables
-- **Styling:** Modern CSS with responsive design
+* **Zero‑downtime rolling updates** during deployments
+* **Seamless scaling** to handle unpredictable load
+* **40% faster image builds** through optimized Docker layering
 
-### Backend (Optional)
+---
 
-- **Framework:** Express.js for reminder API
-- **Authentication:** Firebase Admin SDK
-- **Integration:** Firebase Firestore
-- **Purpose:** Advanced features like automated reminders
+## 📝 Contributing
 
-### Security Features
+Contributions are welcome! Please open an issue or submit a pull request.
 
-- Firebase Authentication with email/password
-- Firestore security rules for data protection
-- User-specific data isolation
-- Real-time permission validation
+---
 
-### Real-time Features
+## ⚖️ License
 
-- Live task updates across devices
-- Real-time notifications
-- Instant data synchronization
-- Collaborative capabilities ready
-
-## 🔗 Main Features
-
-### Task Management
-
-- ✅ Create, edit, delete todos
-- 🏷️ Tag-based organization
-- 📅 Due date management
-- ⭐ Priority levels
-
-### Notes System
-
-- 📝 Rich text notes
-- 🔗 Task linking
-- 🔄 Real-time sync
-- 👤 User-specific content
-
-### Calendar View
-
-- 📅 Monthly/weekly views
-- 📍 Task positioning by date
-- 🎯 Visual task management
-- 📊 Progress tracking
-
-### Notifications
-
-- 🔔 Real-time alerts
-- ⏰ Reminder system
-- 📱 Cross-device sync
-- 🎛️ Customizable settings
-
-## 🧪 Testing
-
-Run frontend tests:
-
-```bash
-cd frontend
-npm run test
-```
-
-Run backend tests:
-
-```bash
-cd backend
-npm test
-```
-
-## 🚀 Deployment
-
-### Firebase Hosting (Frontend)
-
-```bash
-cd frontend
-npm run build
-firebase deploy
-```
-
-### Cloud Run (Backend)
-
-```bash
-cd backend
-gcloud run deploy todo-backend --source .
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run tests (`npm test`)
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## 🆘 Troubleshooting
-
-### Common Issues
-
-1. **Permission denied errors:**
-
-   - Ensure Firestore rules are properly deployed
-   - Verify user authentication status
-   - Check that `userId` is correctly set in document data
-
-2. **Firebase configuration errors:**
-
-   - Verify all Firebase config values are correct
-   - Ensure Firebase project has Authentication and Firestore enabled
-   - Check that the web app is properly configured in Firebase
-
-3. **Build/deployment issues:**
-   - Clear node_modules and reinstall dependencies
-   - Verify Node.js version compatibility (v16+)
-   - Check environment variables and configuration files
-
-### Support
-
-For additional support:
-
-- Check the [Issues](https://github.com/your-repo/issues) section
-- Review Firebase documentation
-- Consult Vue 3 documentation for frontend issues
+MIT © David Mboli-Idie
