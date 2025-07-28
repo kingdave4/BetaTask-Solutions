@@ -2,6 +2,7 @@
 
 > Full‑stack Todo application with Vue.js + Vite, Node.js + Express + PostgreSQL, and Terraform‑provisioned AKS/ACR on Azure.
 
+---
 
 ## 🔗 Links
 
