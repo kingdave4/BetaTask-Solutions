@@ -35,11 +35,10 @@
 
 2. **Create your own terraform.tfvars file**
    
-```bash
-touch terraform.tfvars
+   ```bash
+   touch terraform.tfvars
    ```
-
-Open terraform.tfvars and fill in your own values:
+   Open terraform.tfvars and fill in your own values:
 
    ```tf
    subscription_id     = "Your Subscription ID"
@@ -57,7 +56,7 @@ Open terraform.tfvars and fill in your own values:
    ```
 
 
-3. **Provision Infrastructure**
+4. **Provision Infrastructure**
 
    ```bash
    terraform init
@@ -67,12 +66,12 @@ Open terraform.tfvars and fill in your own values:
 
    *Pro Tip*: Store state in Azure Blob Storage with soft-delete enabled.
 
-4. **Configure GitHub Secrets** (in repo Settings > Secrets)
+5. **Configure GitHub Secrets** (in repo Settings > Secrets)
 
    * `AZURE_CREDENTIALS` (Service Principal JSON)
    * `ACR_LOGIN_SERVER`, `ACR_USERNAME`, `ACR_PASSWORD`
 
-5. **Run CI/CD**
+6. **Run CI/CD**
 
    * Push to `main` branch to trigger **Build & Push Images** workflow.
    * On success, **Deploy to AKS** workflow runs automatically.
@@ -121,8 +120,6 @@ BetaTask-Solutions/
 └── frontend-service.yaml
 │
 ```
-
----
 
 ### 🎯 Key Outcomes
 
