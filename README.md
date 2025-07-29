@@ -32,22 +32,47 @@
    cd BetaTask-Solutions/Infra/environments/dev
    ```
 
-2. **Provision Infrastructure**
+
+2. **Create your own terraform.tfvars file**
+   
+```bash
+touch terraform.tfvars
+   ```
+
+Open terraform.tfvars and fill in your own values:
+
+```tf
+resource_group_name      = "your-resource-group-name"
+location                 = "EastUS2"
+prefix                   = "your-prefix"
+
+# Mailgun configuration
+mailgun_api_key          = "your-mailgun-api-key"
+my_mailgun_domain        = "your-mailgun-domain"
+my_mailgun_from_email    = "your-from-email@example.com"
+my_mailgun_to_email      = "your-to-email@example.com"
+
+# Static site settings
+static_site_name         = "your-static-site-name"
+```
+
+
+3. **Provision Infrastructure**
 
    ```bash
    terraform init
-   terraform plan -var-file="secrets.tfvars"
-   terraform apply -var-file="secrets.tfvars" -auto-approve
+   terraform plan -var-file="terraform.tfvars"
+   terraform apply -var-file="terraform.tfvars" -auto-approve
    ```
 
    *Pro Tip*: Store state in Azure Blob Storage with soft-delete enabled.
 
-3. **Configure GitHub Secrets** (in repo Settings > Secrets)
+4. **Configure GitHub Secrets** (in repo Settings > Secrets)
 
    * `AZURE_CREDENTIALS` (Service Principal JSON)
    * `ACR_LOGIN_SERVER`, `ACR_USERNAME`, `ACR_PASSWORD`
 
-4. **Run CI/CD**
+5. **Run CI/CD**
 
    * Push to `main` branch to trigger **Build & Push Images** workflow.
    * On success, **Deploy to AKS** workflow runs automatically.
@@ -90,14 +115,11 @@ BetaTask-Solutions/
 │       ├── build-and-push.yml
 │       └── deploy-to-aks.yml
 │
-├── k8s/                      # Kubernetes manifests
-│   ├── backend-deployment.yaml
-│   ├── backend-service.yaml
-│   ├── frontend-deployment.yaml
-│   └── frontend-service.yaml
+├── backend-deployment.yaml
+├── backend-service.yaml
+├── frontend-deployment.yaml
+└── frontend-service.yaml
 │
-└── docs/                     # Documentation and diagrams
-    └── architecture-diagram.png
 ```
 
 ---
