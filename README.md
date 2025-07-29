@@ -41,20 +41,20 @@ touch terraform.tfvars
 
 Open terraform.tfvars and fill in your own values:
 
-```tf
-resource_group_name      = "your-resource-group-name"
-location                 = "EastUS2"
-prefix                   = "your-prefix"
+   ```tf
+   subscription_id     = "Your Subscription ID"
+   resource_group_name = "rg-todo-dev"
+   acr_name            = "todocrdev123"
 
-# Mailgun configuration
-mailgun_api_key          = "your-mailgun-api-key"
-my_mailgun_domain        = "your-mailgun-domain"
-my_mailgun_from_email    = "your-from-email@example.com"
-my_mailgun_to_email      = "your-to-email@example.com"
-
-# Static site settings
-static_site_name         = "your-static-site-name"
-```
+   location     = "eastus2"
+   cluster_name = "todo-aks-dev"
+   vm_size      = "Standard_B2s"
+   tags = {
+     environment = "dev"
+     project     = "ToDoList"
+     owner       = "Your Name(s)"
+   }
+   ```
 
 
 3. **Provision Infrastructure**
