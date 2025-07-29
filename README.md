@@ -118,7 +118,6 @@ BetaTask-Solutions/
 ├── backend-service.yaml
 ├── frontend-deployment.yaml
 └── frontend-service.yaml
-│
 ```
 
 ### 🎯 Key Outcomes
