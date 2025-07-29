@@ -87,37 +87,49 @@
 ### 📁 Project Structure
 
 ```
-BetaTask-Solutions/
-├── backend/                  # Node.js + Express API
-│   ├── routes/               # API endpoints
-│   ├── models/               # PostgreSQL data models
-│   ├── migrations/           # Database migrations
-│   └── server.js             # Entry point
-│
-├── frontend/                 # Vue.js + Vite frontend
-│   ├── src/
-│   │   ├── components/       # Vue components
-│   │   ├── composables/       # Vue composables
-│   │   └── services/         # API service calls
-│   └── vite.config.js        # Build configuration
-│
-├── Infra/                    # Terraform IaC
-│   ├── environments/
-│   │   └── dev/              # Dev environment configs
-│   └── modules/              # Reusable Terraform modules
-│       ├── resource-group/
-│       ├── container-registry/
-│       └── aks/
-│
+ToDoList-Solutions/
 ├── .github/                  # GitHub Actions workflows
 │   └── workflows/
 │       ├── build-and-push.yml
 │       └── deploy-to-aks.yml
-│
-├── backend-deployment.yaml
-├── backend-service.yaml
-├── frontend-deployment.yaml
-└── frontend-service.yaml
+├── frontend/                    # Vue 3 frontend
+│   ├── src/
+│   │   ├── components/         # Vue components
+│   │   │   ├── AddTodoModal.vue
+│   │   │   ├── CalendarPage.vue
+│   │   │   ├── DashboardPage.vue
+│   │   │   ├── Notes.vue
+│   │   │   ├── NotificationCenter.vue
+│   │   │   ├── ReminderModal.vue
+│   │   │   ├── TagsManager.vue
+│   │   │   └── TodoItem.vue
+│   │   ├── composables/        # Vue composables
+│   │   │   ├── useAuth.js
+│   │   │   └── useNotifications.js
+│   │   ├── services/           # API services
+│   │   └── firebase.js         # Firebase configuration
+├── backend/                     # Node.js backend (optional)
+│   ├── routes/                 # API routes
+│   │   ├── auth.js
+│   │   └── reminders.js
+│   ├── middleware/             # Authentication middleware
+│   ├── tests/                  # Test files
+│   └── server.js               # Entry point
+├── Infra/                      # Terraform infrastructure
+│   ├── environments/dev/       # Development environment
+│   ├   ├── backend.tf                  # Backend configuation - Tfstate file configuration 
+│   ├   ├── main.tf                  # Module main reusable file
+│   ├   ├── provider.tf                # Reusable Terraform modules
+│   ├   ├── variable.tf                 # Variable file
+│   ├   ├── secrets.tfvars                 # default variable file
+│   └── modules/                # Terraform modules
+│   │   ├── resource-group/       # Azure resource group for all the services
+│   │   ├── aks/       # Azure Kubernetes terraformm configuration file
+│   │   ├── container-registry/         # Azure container registry to store the images
+├── firestore.rules             # Firestore security rules
+├── docker-compose.yml          # Multi-service setup
+├── *-deployment.yaml           # Kubernetes deployments
+└── *-service.yaml              # Kubernetes services
 ```
 
 ### 🎯 Key Outcomes
